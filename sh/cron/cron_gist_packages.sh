@@ -11,7 +11,7 @@ PACMAN_CACHE="$DIR/pacman"
 AUR_CACHE="$DIR/aur"
 
 pacman_list="$(pacman -Qqe -n)"
-aur_list="$(yay -Qqe -m --aur)"
+aur_list="$(pacman -Qqe -m)" # AUR and other foreign packages that have been explicitly installed.
 
 # tail to skip first 3 lines
 pchanges="$(echo "$pacman_list" | diff -N -U0 "$PACMAN_CACHE" - | tail -n +4)"
