@@ -15,7 +15,7 @@ CACHE="$DIR/$name"
 script="$(find "$SCRIPTS" -type f -executable -name "$name")"
 [ -z "$script" ] && echo "[$BN] ERROR: FNF. exit." && exit 3
 
-output="$("$script")"
+output="$("$script" -aur)" # -aur to exclude aur repos from output
 [ -z "$output" ] && echo "[$BN] ERROR: output is empty. exit." && exit 4
 
 # Exit status is 0 if inputs are the same, 1 if different, 2 if trouble.
