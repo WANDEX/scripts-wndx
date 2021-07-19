@@ -1,6 +1,8 @@
 #!/bin/sh
 # cron script that pushes to gist output of gfclone script
 
+cd ~ || exit # cd to home dir
+
 name="gfclone"
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
