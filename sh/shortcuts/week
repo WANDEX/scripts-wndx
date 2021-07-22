@@ -1,7 +1,34 @@
 #!/bin/sh
 # shortcut - to edit last/previous or current week pomodoro file by default
+
 case "$1" in
     last|prev|l|p) file="$(date -d 'last week' +'week-%V-%Y.txt')" ;;
     *) file="$(date +'week-%V-%Y.txt')" ;;
 esac
-$EDITOR "$HOME/Documents/Pomodoro/$file"
+
+PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
+fpath="$PMDRD/$file"
+
+grep_day() { day="$(grep "^$1" "$fpath")" ;}
+
+if [ -n "$2" ]; then
+    case "$2" in
+        # grep for today, yesterday and any day, week name
+        [Tt]oday)           grep_day "$(date +%A)" ;;
+        [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
+        [Mm]|[Mm]onday)     grep_day "Monday"    ;;
+        [Tt]|[Tt]uesday)    grep_day "Tuesday"   ;;
+        [Ww]|[Ww]ednesday)  grep_day "Wednesday" ;;
+        [Tt]h|[Tt]hursday)  grep_day "Thursday"  ;;
+        [Ff]|[Ff]riday)     grep_day "Friday"    ;;
+        [Ss]a|[Ss]aturday)  grep_day "Saturday"  ;;
+        [Ss]u|[Ss]unday)    grep_day "Sunday"    ;;
+    esac
+fi
+
+if [ -n "$day" ]; then
+    echo "$day"
+    exit 0
+fi
+
+$EDITOR "$fpath"
