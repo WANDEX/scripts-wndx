@@ -36,7 +36,7 @@ sec_to_hm() { date --date="@$1" -u +%R ;} # convert seconds to HH:MM
 
 sec_to_hm_inf() {
     # convert seconds into hours that bigger than 24h
-    time_hh_mm="$(date --date="@$1" -u +"%R")"
+    time_hh_mm="$(date --date="@$1" -u +"%-H:%M")" # hours without leading zeroes -> to sum later
     time_days="$(date --date="@$1" -u +"%-j")"
     time_days="$(("$time_days-1"))" # subtract 1 (because always starts from 1)
     if [ "$time_days" != "0" ]; then # because -gt 0 less stable
