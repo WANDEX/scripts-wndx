@@ -30,6 +30,16 @@ hm_to_sec() { date --date="$1" +%s ;} # convert time to seconds
 sec_diff() { echo "$(($1-$2))" ;} # subtract and return difference in seconds
 sec_to_hm() { date --date="@$1" -u +%R ;} # convert seconds to HH:MM
 
+total_time_spent() {
+    # example usage: total_time_spent "01:00 00:01"
+    # returns: sum in seconds
+    EPOCH='jan 1 1970'; sum=0
+    for i in $1; do # 1 specifically without double quotes!
+      sum="$(date -u -d "$EPOCH $i" +%s) + $sum"
+    done
+    echo "$sum" | bc
+}
+
 if [ -n "$3" ]; then
     case "$3" in
         calc)
@@ -54,7 +64,19 @@ fi
 
 if [ -n "$3" ] && [ -z "$4" ]; then
     echo "$day"
+    exit 0
+fi
 
+if [ -n "$4" ]; then
+    case "$4" in
+        total)
+            # calculate total time spent for selected (day or week)
+            spent_oneline="$(echo "$day" | awk '{print $3}' | tr '\n' ' ')"
+            sec_total="$(total_time_spent "$spent_oneline")"
+            total="$(sec_to_hm "$sec_total")"
+            echo "$total"
+        ;;
+    esac
     exit 0
 fi
 
@@ -63,5 +85,4 @@ if [ -n "$day" ]; then
     exit 0
 fi
 
-#TODO calculate total working hours for selected (day or week)
 $EDITOR "$fpath"
