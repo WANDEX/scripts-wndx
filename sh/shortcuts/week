@@ -2,6 +2,7 @@
 # shortcut - to edit last/previous or current week pomodoro file by default
 
 case "$1" in
+    -[0-9]*) file="$(date -d "$1" +'week-%V-%Y.txt')" ;; # (relative) example: -1week
     last|prev|l|p) file="$(date -d 'last week' +'week-%V-%Y.txt')" ;;
     *) file="$(date +'week-%V-%Y.txt')" ;;
 esac
@@ -9,14 +10,15 @@ esac
 PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
 fpath="$PMDRD/$file"
 
-grep_day() { slice="$(grep "^$1" "$fpath")" ;}
+grep_day() { slice="$(grep -s "^$1" "$fpath")" ;}
 
 if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
+        -[0-9]*)            grep_day "$(date -d "$2" +%A)" ;; # (relative) example: -1day
         [iI][Ww]eek)        grep_iweek=1; slice="$(cat "$fpath")" ;; # for the full week by days individually
         [Ww]eek)            grep_week=1; slice="$(cat "$fpath")" ;; # for the full week
-        [Tt]oday)           grep_day "$(date +%A)"  ;;
+        [Tt]oday|[Dd]ay)    grep_day "$(date +%A)" ;;
         [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
         [Mm]|[Mm]onday)     grep_day "Monday"    ;;
         [Tt]|[Tt]uesday)    grep_day "Tuesday"   ;;
@@ -73,7 +75,7 @@ if [ -n "$3" ]; then
         calc)
             hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
             sep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
-            dgrep="$(echo "$slice" | grep -o "${hm}.*${hm}")"
+            dgrep="$(echo "$slice" | grep -s -o "${hm}.*${hm}")"
             old_sep="$(echo "$dgrep" | head -n1 | sed "s/.*\($sep\).*/\1/")"
             hm_pairs="$(echo "$dgrep" | sed "s/$sep/-/")"
             for line in $hm_pairs; do
