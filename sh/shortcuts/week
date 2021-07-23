@@ -34,7 +34,10 @@ if [ -n "$3" ]; then
     case "$3" in
         calc)
             hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
-            hm_pairs="$(echo "$day" | grep -o "${hm}.*${hm}" | sed "s/ . /-/")"
+            sep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
+            dgrep="$(echo "$day" | grep -o "${hm}.*${hm}")"
+            old_sep="$(echo "$dgrep" | head -n1 | sed "s/.*\($sep\).*/\1/")"
+            hm_pairs="$(echo "$dgrep" | sed "s/$sep/-/")"
             for line in $hm_pairs; do
                 hm_fr="$(echo "$line" | cut -d- -f1)"
                 hm_to="$(echo "$line" | cut -d- -f2)"
@@ -42,14 +45,16 @@ if [ -n "$3" ]; then
                 sec_to="$(hm_to_sec "$hm_to")"
                 seconds="$(sec_diff "$sec_to" "$sec_fr")"
                 new="$(sec_to_hm "$seconds")"
-                hm_pairs="$(echo "$hm_pairs" | sed "s/$line/$new/")" # replace original $line with new
+                # replace the original time interval with the new calculated time spent
+                day="$(echo "$day" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")"
             done
         ;;
     esac
 fi
 
 if [ -n "$3" ] && [ -z "$4" ]; then
-    echo "$hm_pairs"
+    echo "$day"
+
     exit 0
 fi
 
