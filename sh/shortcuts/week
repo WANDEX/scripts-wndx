@@ -14,7 +14,8 @@ grep_day() { slice="$(grep "^$1" "$fpath")" ;}
 if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
-        [Ww]eek) grep_week=1; slice="$(cat "$fpath")" ;; # for the full week
+        [iI][Ww]eek)        grep_iweek=1; slice="$(cat "$fpath")" ;; # for the full week by days individually
+        [Ww]eek)            grep_week=1; slice="$(cat "$fpath")" ;; # for the full week
         [Tt]oday)           grep_day "$(date +%A)"  ;;
         [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
         [Mm]|[Mm]onday)     grep_day "Monday"    ;;
@@ -31,6 +32,24 @@ hm_to_sec() { date --date="$1" +%s ;} # convert time to seconds
 sec_diff() { echo "$(($1-$2))" ;} # subtract and return difference in seconds
 sec_to_hm() { date --date="@$1" -u +%R ;} # convert seconds to HH:MM
 
+sec_to_hm_inf() {
+    # convert seconds into hours that bigger than 24h
+    time_hh_mm="$(date --date="@$1" -u +"%R")"
+    time_days="$(date --date="@$1" -u +"%-j")"
+    time_days="$(("$time_days-1"))" # subtract 1 (because always starts from 1)
+    if [ "$time_days" != "0" ]; then # because -gt 0 less stable
+        hours="$(("$time_days*24"))" # convert days to hours
+        time_hh="$(echo "$time_hh_mm" | cut -d: -f1)" # hours
+        time_mm="$(echo "$time_hh_mm" | cut -d: -f2)" # minutes
+        hh_sum="$(("$hours+$time_hh"))"
+        time_hh_inf="${hh_sum}:${time_mm}"
+        echo "$time_hh_inf"
+    else
+        echo "$time_hh_mm"
+    fi
+
+}
+
 total_time_spent() {
     # example usage: total_time_spent "01:00 00:01"
     # returns: sum in seconds
@@ -39,6 +58,14 @@ total_time_spent() {
       sum="$(date -u -d "$EPOCH $i" +%s) + $sum"
     done
     echo "$sum" | bc
+}
+
+total_slice() {
+    [ -z "$1" ] && return # simply return from function
+    # returns: total time spent for slice $1 in 24h HH:MM
+    spent_oneline="$(echo "$1" | awk '{print $3}' | tr '\n' ' ')"
+    sec_total="$(total_time_spent "$spent_oneline")"
+    sec_to_hm "$sec_total"
 }
 
 if [ -n "$3" ]; then
@@ -68,14 +95,49 @@ if [ -n "$3" ] && [ -z "$4" ]; then
     exit 0
 fi
 
+total_week() {
+    s_mon="$(echo "$slice" | grep -s "^Monday")"
+    s_tue="$(echo "$slice" | grep -s "^Tuesday")"
+    s_wed="$(echo "$slice" | grep -s "^Wednesday")"
+    s_thu="$(echo "$slice" | grep -s "^Thursday")"
+    s_fri="$(echo "$slice" | grep -s "^Friday")"
+    s_sat="$(echo "$slice" | grep -s "^Saturday")"
+    s_sun="$(echo "$slice" | grep -s "^Sunday")"
+    # calculate total time spent for each day of week individually
+    t_mon="$(total_slice "$s_mon")"
+    t_tue="$(total_slice "$s_tue")"
+    t_wed="$(total_slice "$s_wed")"
+    t_thu="$(total_slice "$s_thu")"
+    t_fri="$(total_slice "$s_fri")"
+    t_sat="$(total_slice "$s_sat")"
+    t_sun="$(total_slice "$s_sun")"
+    if [ "$grep_iweek" ]; then
+        # print individual totals for each day of week
+        [ -n "$t_mon" ] && echo "mon: $t_mon"
+        [ -n "$t_tue" ] && echo "tue: $t_tue"
+        [ -n "$t_wed" ] && echo "wed: $t_wed"
+        [ -n "$t_thu" ] && echo "thu: $t_thu"
+        [ -n "$t_fri" ] && echo "fri: $t_fri"
+        [ -n "$t_sat" ] && echo "sat: $t_sat"
+        [ -n "$t_sun" ] && echo "sun: $t_sun"
+    else
+        week_totals="${t_mon} ${t_tue} ${t_wed} ${t_thu} ${t_fri} ${t_sat} ${t_sun}"
+        week_seconds="$(total_time_spent "$week_totals")"
+        sec_to_hm_inf "$week_seconds"
+    fi
+}
+
 if [ -n "$4" ]; then
     case "$4" in
         total)
             # calculate total time spent for selected (day or week)
-            spent_oneline="$(echo "$slice" | awk '{print $3}' | tr '\n' ' ')"
-            sec_total="$(total_time_spent "$spent_oneline")"
-            total="$(sec_to_hm "$sec_total")"
-            echo "$total"
+            if [ "$grep_week" ] || [ "$grep_iweek" ]; then
+                total="$(total_week)"
+                echo "$total"
+            else
+                total="$(total_slice "$slice")"
+                echo "$total"
+            fi
         ;;
     esac
     exit 0
