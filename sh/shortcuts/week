@@ -9,12 +9,13 @@ esac
 PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
 fpath="$PMDRD/$file"
 
-grep_day() { day="$(grep "^$1" "$fpath")" ;}
+grep_day() { slice="$(grep "^$1" "$fpath")" ;}
 
 if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
-        [Tt]oday)           grep_day "$(date +%A)" ;;
+        [Ww]eek) grep_week=1; slice="$(cat "$fpath")" ;; # for the full week
+        [Tt]oday)           grep_day "$(date +%A)"  ;;
         [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
         [Mm]|[Mm]onday)     grep_day "Monday"    ;;
         [Tt]|[Tt]uesday)    grep_day "Tuesday"   ;;
@@ -45,7 +46,7 @@ if [ -n "$3" ]; then
         calc)
             hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
             sep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
-            dgrep="$(echo "$day" | grep -o "${hm}.*${hm}")"
+            dgrep="$(echo "$slice" | grep -o "${hm}.*${hm}")"
             old_sep="$(echo "$dgrep" | head -n1 | sed "s/.*\($sep\).*/\1/")"
             hm_pairs="$(echo "$dgrep" | sed "s/$sep/-/")"
             for line in $hm_pairs; do
@@ -56,14 +57,14 @@ if [ -n "$3" ]; then
                 seconds="$(sec_diff "$sec_to" "$sec_fr")"
                 new="$(sec_to_hm "$seconds")"
                 # replace the original time interval with the new calculated time spent
-                day="$(echo "$day" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")"
+                slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")"
             done
         ;;
     esac
 fi
 
 if [ -n "$3" ] && [ -z "$4" ]; then
-    echo "$day"
+    echo "$slice"
     exit 0
 fi
 
@@ -71,7 +72,7 @@ if [ -n "$4" ]; then
     case "$4" in
         total)
             # calculate total time spent for selected (day or week)
-            spent_oneline="$(echo "$day" | awk '{print $3}' | tr '\n' ' ')"
+            spent_oneline="$(echo "$slice" | awk '{print $3}' | tr '\n' ' ')"
             sec_total="$(total_time_spent "$spent_oneline")"
             total="$(sec_to_hm "$sec_total")"
             echo "$total"
@@ -80,8 +81,8 @@ if [ -n "$4" ]; then
     exit 0
 fi
 
-if [ -n "$day" ]; then
-    echo "$day"
+if [ -n "$slice" ]; then
+    echo "$slice"
     exit 0
 fi
 
