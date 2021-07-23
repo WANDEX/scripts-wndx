@@ -26,9 +26,37 @@ if [ -n "$2" ]; then
     esac
 fi
 
+hm_to_sec() { date --date="$1" +%s ;} # convert time to seconds
+sec_diff() { echo "$(($1-$2))" ;} # subtract and return difference in seconds
+sec_to_hm() { date --date="@$1" -u +%R ;} # convert seconds to HH:MM
+
+if [ -n "$3" ]; then
+    case "$3" in
+        calc)
+            hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
+            hm_pairs="$(echo "$day" | grep -o "${hm}.*${hm}" | sed "s/ . /-/")"
+            for line in $hm_pairs; do
+                hm_fr="$(echo "$line" | cut -d- -f1)"
+                hm_to="$(echo "$line" | cut -d- -f2)"
+                sec_fr="$(hm_to_sec "$hm_fr")"
+                sec_to="$(hm_to_sec "$hm_to")"
+                seconds="$(sec_diff "$sec_to" "$sec_fr")"
+                new="$(sec_to_hm "$seconds")"
+                hm_pairs="$(echo "$hm_pairs" | sed "s/$line/$new/")" # replace original $line with new
+            done
+        ;;
+    esac
+fi
+
+if [ -n "$3" ] && [ -z "$4" ]; then
+    echo "$hm_pairs"
+    exit 0
+fi
+
 if [ -n "$day" ]; then
     echo "$day"
     exit 0
 fi
 
+#TODO calculate total working hours for selected (day or week)
 $EDITOR "$fpath"
