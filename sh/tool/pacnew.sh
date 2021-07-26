@@ -35,28 +35,17 @@ show_diff_question() {
     done
 }
 
-printf "[${YEL}%s${END}] ${BLD}$pacnew files found:${END}\n%s\n" "$num_of_files" "$pacnew_files"
-show_diff_question
-
-for file in $pacnew_files; do
-    original_file="$(echo "$file" | sed "s/$pacnew//")"
-    pacold_file="${original_file}${pacold}"
-    [ -f "$original_file" ] && printf "${BLD}old:${END} %s\n" "$original_file"
-    printf "${BLD}${GRN}new:${END} %s\n" "$file"
-    if [ -f "$original_file" ]; then
-        [ "$SDQ" -eq 1 ] && showdiff "$original_file" "$file"
-        echo "${YEL}^files will be renamed:${END}"
-        echo "${BLD}original${END}: '$original_file' ${arrow} '$pacold_file'"
-        echo "${GRN}pacnew${END}  : '$file' ${arrow} '$original_file'"
-        printf "%s " "${RED}Rename files?${END}"
-    else
-        echo "${YEL}^could be simply renamed. (file without $pacnew does not exist)${END}"
-        echo "pacnew  : '$file' ${arrow} '$original_file'"
-        printf "%s " "${RED}Rename file?${END}"
-    fi
+action() {
+    U="${UND}"
+    E="${END}"
+    printf " %s: " "[${U}D${E}iff/${U}Q${E}uit/Y/N]"
     read -n 1 -r
     echo # new line
     case "$REPLY" in
+        [Dd])
+            showdiff "$original_file" "$file"
+            action # recursively run this function again, to decide what action to do
+            ;;
         [Yy])
             if [ -f "$original_file" ]; then
                 sudo mv -f "$original_file" "$pacold_file"
@@ -70,4 +59,27 @@ for file in $pacnew_files; do
         *) printf "${YEL}%s${END}\n" "I don't get it. SKIP" ;;
     esac
     echo # new line
+}
+
+printf "[${YEL}%s${END}] ${BLD}$pacnew files found:${END}\n%s\n" "$num_of_files" "$pacnew_files"
+show_diff_question
+
+for file in $pacnew_files; do
+    original_file="$(echo "$file" | sed "s/$pacnew//")"
+    pacold_file="${original_file}${pacold}"
+    if [ -f "$original_file" ]; then
+        printf "${BLD}old:${END} %s\n" "$original_file"
+        printf "${BLD}${GRN}new:${END} %s\n" "$file"
+        [ "$SDQ" -eq 1 ] && showdiff "$original_file" "$file"
+        echo "${YEL}^files will be renamed:${END}"
+        echo "${BLD}original${END}: '$original_file' ${arrow} '$pacold_file'"
+        echo "${GRN}pacnew${END}  : '$file' ${arrow} '$original_file'"
+        printf "%s " "${RED}Rename files?${END}"
+    else
+        printf "${BLD}${GRN}new:${END} %s\n" "$file"
+        echo "${YEL}^could be simply renamed. (file without $pacnew does not exist)${END}"
+        echo "pacnew  : '$file' ${arrow} '$original_file'"
+        printf "%s " "${RED}Rename file?${END}"
+    fi
+    action
 done
