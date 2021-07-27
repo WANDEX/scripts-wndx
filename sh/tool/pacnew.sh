@@ -38,7 +38,7 @@ show_diff_question() {
 action() {
     U="${UND}"
     E="${END}"
-    printf " %s: " "[${U}D${E}iff/${U}Q${E}uit/Y/N]"
+    printf "%s: " "[${U}D${E}iff/${U}Q${E}uit/Y/N]"
     read -n 1 -r
     echo # new line
     case "$REPLY" in
