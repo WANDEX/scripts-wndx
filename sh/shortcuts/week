@@ -96,10 +96,10 @@ total_slice() {
 case "$3" in
     calc)
         hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
-        sep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
-        dgrep="$(echo "$slice" | grep -s -o "${hm}.*${hm}")"
-        old_sep="$(echo "$dgrep" | head -n1 | sed "s/.*\($sep\).*/\1/")"
-        hm_pairs="$(echo "$dgrep" | sed "s/$sep/-/")"
+        rsep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
+        old_sep="$(echo "$slice" | head -n1 | grep -so "$rsep")"
+        dgrep="$(echo "$slice" | grep -so "${hm}.*${hm}")"
+        hm_pairs="$(echo "$dgrep" | sed "s/$rsep/-/")"
         for line in $hm_pairs; do
             hm_fr="$(echo "$line" | cut -d- -f1)"
             hm_to="$(echo "$line" | cut -d- -f2)"
@@ -108,7 +108,8 @@ case "$3" in
             seconds="$(sec_diff "$sec_to" "$sec_fr")"
             new="$(sec_to_hm "$seconds")"
             # replace the original time interval with the new calculated time spent
-            slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")"
+            # slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")" # sed is unstable
+            slice="${slice/${hm_fr}${old_sep}${hm_to}/$new}" # not POSIX sh compliant
         done
     ;;
     '') # if $3 empty, but $2 not
@@ -151,11 +152,21 @@ total_week() {
     fi
 }
 
+total_search_query() {
+    squery_spent_oneline="$(echo "$slice" | grep -so "$hm" | tr '\n' ' ')"
+    squery_seconds="$(total_time_spent "$squery_spent_oneline")"
+    sec_to_hm_inf "$squery_seconds"
+}
+
 if [ -n "$4" ]; then
     case "$4" in
         total)
-            # calculate total time spent for selected (day or week)
-            if [ "$grep_week" ] || [ "$grep_iweek" ]; then
+            if [ -n "$search_query" ]; then
+                # calculate total over search_query
+                total="$(total_search_query)"
+                echo "$total"
+            elif [ "$grep_week" ] || [ "$grep_iweek" ]; then
+                # calculate total time spent for selected (day or week)
                 total="$(total_week)"
                 echo "$total"
             else
