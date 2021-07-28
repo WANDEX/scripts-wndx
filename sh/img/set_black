@@ -1,3 +1,17 @@
 #!/bin/sh
+# toggle between setbg --startup & black image as wallpaper
+#
 # simply open image with solid black color that fills the entire space
-sxiv -qbp -z 1000 ~/Wallpapers/code/1_Solid_black.png
+# sxiv -qbp -z 1000 ~/Wallpapers/code/1_Solid_black.png
+
+CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
+CACHE="$CSCRDIR/set_black"
+[ ! -f "$CACHE" ] && touch "$CACHE"
+fcontent="$(cat "$CACHE")"
+if [ -z "$fcontent" ]; then
+    echo "set" > "$CACHE"
+    xwallpaper --maximize ~/Wallpapers/code/1_Solid_black.png
+else
+    echo "" > "$CACHE"
+    setbg --startup
+fi
