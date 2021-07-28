@@ -93,33 +93,31 @@ total_slice() {
     sec_to_hm "$sec_total"
 }
 
-if [ -n "$3" ]; then
-    case "$3" in
-        calc)
-            hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
-            sep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
-            dgrep="$(echo "$slice" | grep -s -o "${hm}.*${hm}")"
-            old_sep="$(echo "$dgrep" | head -n1 | sed "s/.*\($sep\).*/\1/")"
-            hm_pairs="$(echo "$dgrep" | sed "s/$sep/-/")"
-            for line in $hm_pairs; do
-                hm_fr="$(echo "$line" | cut -d- -f1)"
-                hm_to="$(echo "$line" | cut -d- -f2)"
-                sec_fr="$(hm_to_sec "$hm_fr")"
-                sec_to="$(hm_to_sec "$hm_to")"
-                seconds="$(sec_diff "$sec_to" "$sec_fr")"
-                new="$(sec_to_hm "$seconds")"
-                # replace the original time interval with the new calculated time spent
-                slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")"
-            done
-        ;;
-    esac
-fi
-
-# if [ -n "$3" ] && [ -z "$4" ]; then
-if [ -z "$3" ]; then
-    echo "$slice"
-    exit 0
-fi
+case "$3" in
+    calc)
+        hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
+        sep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
+        dgrep="$(echo "$slice" | grep -s -o "${hm}.*${hm}")"
+        old_sep="$(echo "$dgrep" | head -n1 | sed "s/.*\($sep\).*/\1/")"
+        hm_pairs="$(echo "$dgrep" | sed "s/$sep/-/")"
+        for line in $hm_pairs; do
+            hm_fr="$(echo "$line" | cut -d- -f1)"
+            hm_to="$(echo "$line" | cut -d- -f2)"
+            sec_fr="$(hm_to_sec "$hm_fr")"
+            sec_to="$(hm_to_sec "$hm_to")"
+            seconds="$(sec_diff "$sec_to" "$sec_fr")"
+            new="$(sec_to_hm "$seconds")"
+            # replace the original time interval with the new calculated time spent
+            slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")"
+        done
+    ;;
+    '') # if $3 empty, but $2 not
+        if [ -n "$2" ]; then
+            echo "$slice"
+            exit 0
+        fi
+    ;;
+esac
 
 total_week() {
     s_mon="$(echo "$slice" | grep -s "^Monday")"
