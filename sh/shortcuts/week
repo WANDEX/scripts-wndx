@@ -4,7 +4,8 @@
 case "$1" in
     -[0-9]*) file="$(date -d "$1" +'week-%V-%Y.txt')" ;; # (relative) example: -1week
     last|prev|l|p) file="$(date -d 'last week' +'week-%V-%Y.txt')" ;;
-    *) file="$(date +'week-%V-%Y.txt')" ;;
+    c|cur|curr|current) file="$(date +'week-%V-%Y.txt')" ;;
+    *) search_query="$1"; file="$(date +'week-%V-%Y.txt')" ;;
 esac
 
 PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
@@ -12,10 +13,30 @@ fpath="$PMDRD/$file"
 
 grep_day() { slice="$(grep -s "^$1" "$fpath")" ;}
 
+grep_query() {
+    if [ -n "$search_query" ]; then
+        cd "$PMDRD" || exit 1
+        files="$(find . -type f \( ! -iname "TODO*" \) | sort -V)"
+        if [ "$grep_month" ]; then
+            lmwfn="$(date -d "last month +1week" "+week-%V-%Y.txt")"
+            files="$(echo "$files" | awk "/$lmwfn/{found=1} found")" # all lines after pattern incl.
+        elif [ "$grep_year" ]; then
+            lywfn="$(date -d "last year +1week" "+week-%V-%Y.txt")"
+            files="$(echo "$files" | awk "/$lywfn/{found=1} found")" # all lines after pattern incl.
+        fi
+        files_in_one_line="$(echo "$files" | tr '\n' ' ')"
+        # shellcheck disable=SC2086 # (Double quote to prevent globbing and word splitting)
+        MEGACAT="$(cat $files_in_one_line)" # all files split by space
+        slice="$(echo "$MEGACAT" | grep -s "$search_query")"
+    fi
+}
+
 if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
         -[0-9]*)            grep_day "$(date -d "$2" +%A)" ;; # (relative) example: -1day
+        [Yy]ear)            grep_year=1     ;;
+        [Mm]onth)           grep_month=1    ;;
         [iI][Ww]eek)        grep_iweek=1; slice="$(cat "$fpath")" ;; # for the full week by days individually
         [Ww]eek)            grep_week=1; slice="$(cat "$fpath")" ;; # for the full week
         [Tt]oday|[Dd]ay)    grep_day "$(date +%A)" ;;
@@ -27,7 +48,9 @@ if [ -n "$2" ]; then
         [Ff]|[Ff]riday)     grep_day "Friday"    ;;
         [Ss]a|[Ss]aturday)  grep_day "Saturday"  ;;
         [Ss]u|[Ss]unday)    grep_day "Sunday"    ;;
+        *) ;; # grep from overall history
     esac
+    grep_query
 fi
 
 hm_to_sec() { date --date="$1" +%s ;} # convert time to seconds
@@ -92,7 +115,8 @@ if [ -n "$3" ]; then
     esac
 fi
 
-if [ -n "$3" ] && [ -z "$4" ]; then
+# if [ -n "$3" ] && [ -z "$4" ]; then
+if [ -z "$3" ]; then
     echo "$slice"
     exit 0
 fi
