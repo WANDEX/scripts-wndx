@@ -35,10 +35,10 @@ if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
         -[0-9]*)            grep_day "$(date -d "$2" +%A)" ;; # (relative) example: -1day
-        [Yy]ear)            grep_year=1     ;;
-        [Mm]onth)           grep_month=1    ;;
+        [Yy]ear)            grep_year=1   ;;
+        [Mm]onth)           grep_month=1  ;;
         [iI][Ww]eek)        grep_iweek=1; slice="$(cat "$fpath")" ;; # for the full week by days individually
-        [Ww]eek)            grep_week=1; slice="$(cat "$fpath")" ;; # for the full week
+        [Ww]eek)            grep_week=1;  slice="$(cat "$fpath")" ;; # for the full week
         [Tt]oday|[Dd]ay)    grep_day "$(date +%A)" ;;
         [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
         [Mm]|[Mm]onday)     grep_day "Monday"    ;;
