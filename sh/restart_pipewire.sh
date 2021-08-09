@@ -1,7 +1,7 @@
 #!/bin/sh
 # restart sound related programs and pipewire itself
 
-pulseeffects --quit
+easyeffects --quit
 
 # restart pipewire
 systemctl --user restart pipewire.service
@@ -16,6 +16,6 @@ pkill mpdas
 setsid -f mpdas -d
 pkill mpdup
 setsid -f mpdup
-setsid -f pulseeffects --gapplication-service
-printf "\n%s\n" "Use ^C to exit out of junk outputted by pulseeffects to terminal."
+setsid -f easyeffects --gapplication-service
+printf "\n%s\n" "Use ^C to exit out of junk outputted by easyeffects to terminal."
 # WARNINGS etc. dunno how to suppress that...
