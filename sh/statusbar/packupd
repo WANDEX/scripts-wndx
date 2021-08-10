@@ -22,13 +22,12 @@ fi
 write_to_file() {
     packupd_file="$CSCRDIR/non_live_packupd"
     pacman -Qu > "$packupd_file"
-    echo -e "\nAUR PACKAGES:" >> "$packupd_file"
+    printf "\n%s" "AUR PACKAGES:" >> "$packupd_file"
     yay --aur -Qu >> "$packupd_file"
 }
 
 case $BLOCK_BUTTON in
     1) write_to_file && setsid -f "$TERMINAL" -e less -Srf "$packupd_file" ;;
-    2) setsid -f "$TERMINAL" -e popupgrade ;;
     3) notify-send "🎁 Upgrade module" "📦: number of upgradable packages
 - Left click to show upgradable packages
 - Middle click to upgrade packagen" ;;
