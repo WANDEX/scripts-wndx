@@ -7,7 +7,7 @@ YTM="$MUSIC"'~YTM/'
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -e, --end       If url is playlist - how many items to download (by default all:-1)
     -h, --help      Display help

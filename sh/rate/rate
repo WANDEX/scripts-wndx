@@ -5,7 +5,7 @@ CACHE="$CSCRDIR"'/rate/rate'
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 GENERAL OPTIONS
     -c, --convert   Convert and get sum of currencies, separated by (+/-) each
     -e, --exchange  Change exchange currency (default: usd)
@@ -29,12 +29,12 @@ HELP
     --coins         List of supported cryptocurrencies with their full names
     --debug         Show debug messages
 EXAMPLES
-    $(basename $BASH_SOURCE) -c 1337usd -e eur
-    $(basename $BASH_SOURCE) 1337usd to eur
-    $(basename $BASH_SOURCE) 1337 usd in eur
+    $(basename "$0") -c 1337usd -e eur
+    $(basename "$0") 1337usd to eur
+    $(basename "$0") 1337 usd in eur
     - Above examples are equal and are valid.
-    $(basename $BASH_SOURCE) -c 1BTC-10ETH+100LTC
-    $(basename $BASH_SOURCE) -o btc,eth,bch -f "%c:%p[%H]" -d '\\\n'
+    $(basename "$0") -c 1BTC-10ETH+100LTC
+    $(basename "$0") -o btc,eth,bch -f "%c:%p[%H]" -d '\\\n'
 EOF
 
 def_opt() {

@@ -7,14 +7,14 @@
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -h, --help          Display help
 EXAMPLES
 # from stdin pipe
-    youtube-dl --dump-json --no-warnings --playlist-end=1 "\$URL" | $(basename $BASH_SOURCE)
+    youtube-dl --dump-json --no-warnings --playlist-end=1 "\$URL" | $(basename "$0")
 # from \$1 argument
-    $(basename $BASH_SOURCE) "\$JSON_DATA"
+    $(basename "$0") "\$JSON_DATA"
 EOF
 
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && echo "$USAGE" && exit 0

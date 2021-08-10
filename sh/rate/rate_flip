@@ -6,7 +6,7 @@ RATE_FORM="$CSCRDIR"'/rate/rate_form'
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -e, --exclude       Comma separated list of the column names to exclude:
                         'c,p,H,h,m,r' - full list of awailable column names

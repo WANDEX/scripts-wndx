@@ -8,7 +8,7 @@ TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --blacklist Comma-separated list of blacklisted font styles
     -F, --font      Test specified "font family name" styles

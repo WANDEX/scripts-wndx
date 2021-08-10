@@ -3,7 +3,7 @@
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --brief     Show the most relevant translation or its ph. notation only
     -c, --clip      Translate data from clipboard

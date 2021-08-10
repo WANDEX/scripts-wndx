@@ -4,16 +4,16 @@
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -h, --help      Display help
     -n, --name      Name for timer used in notification
     -s, --sleep     Seconds to sleep
     -t, --timer     Set countdown timer to ... '1h2m3s'
 EXAMPLES
-$(basename $BASH_SOURCE) 5m
-$(basename $BASH_SOURCE) -t 1h
-$(basename $BASH_SOURCE) -t 1h33m7s
+$(basename "$0") 5m
+$(basename "$0") -t 1h
+$(basename "$0") -t 1h33m7s
 EOF
 
 get_opt() {

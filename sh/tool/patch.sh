@@ -12,7 +12,7 @@ ST_S=0; ST_F=0; ST_E=0; ST_TOTAL=0
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -a, --add       Add patch to the end of active_patch_list file
     -h, --help      Display help

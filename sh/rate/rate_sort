@@ -6,7 +6,7 @@ RATE_FORM="$CSCRDIR"'/rate/rate_form'
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -a, --ascending     Sort list in a ascending manner
     -c, --colnum        Sort by: 1-name 2-price 3-c24h 4-c01h 5-mcap 6-rank
@@ -18,7 +18,7 @@ OPTIONS
     --top               Get head -n N before applying sort
 EXAMPLE
     # make sort in range of ranks 11-20 (get 10 coins total)
-    $(basename $BASH_SOURCE) -a -c6 -n20 --top 20 --bot 10
+    $(basename "$0") -a -c6 -n20 --top 20 --bot 10
 EOF
 
 get_opt() {

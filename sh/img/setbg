@@ -9,7 +9,7 @@ ST_H="string:x-dunst-stack-tag:hi" # history_ignore
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --clear-margs       Clear magick convert arguments
     -h, --help              Display help
@@ -21,9 +21,9 @@ OPTIONS
     --outname               Set output name with grep -i like 'VGA', first found if many
     --startup               Set default wallpaper image and exit without magick
 EXAMPLES
-    $(basename $BASH_SOURCE) -i image.jpg -x '--maximize' --margs='-colorspace Gray'
+    $(basename "$0") -i image.jpg -x '--maximize' --margs='-colorspace Gray'
     # and to clear margs cache
-    $(basename $BASH_SOURCE) -i image.jpg --margs=''
+    $(basename "$0") -i image.jpg --margs=''
 EOF
 
 get_opt() {

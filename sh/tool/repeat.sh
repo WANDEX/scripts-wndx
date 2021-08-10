@@ -3,13 +3,13 @@
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --command   Command to execute
     -h, --help      Display help
     -s, --sleep     Seconds to sleep between executions (default 0.5)
 EXAMPLE
-    $(basename $BASH_SOURCE) -c 'xdotool click 1' -s 1.0
+    $(basename "$0") -c 'xdotool click 1' -s 1.0
 EOF
 
 get_opt() {

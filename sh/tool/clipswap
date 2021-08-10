@@ -6,7 +6,7 @@ c=0; d=0; p=0; q=0; s=0;
 
 # read into variable using 'Here Document' code block
 read -d '' USAGE <<- EOF
-Usage: $(basename $BASH_SOURCE) [OPTION...]
+Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --content   Show content of primary, clipboard, secondary selections
     -d, --delete    Delete content of all selections
