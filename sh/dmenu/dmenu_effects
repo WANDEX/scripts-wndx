@@ -6,4 +6,6 @@ presets=$(find "$OUTPUT_DIR" -type f -printf '%f\n' | cut -f1 -d"." | sort -h)
 chosen=$(echo "$presets" | dmenu -p 'select preset:' -i)
 [ -z "$chosen" ] && exit 1 # exit if none chosen.
 echo "$chosen" > "$CACHE" # update current preset name in cache file
-easyeffects -l "$chosen"  # change preset
+easyeffects -l "$chosen"  # change preset (real)
+# change at easyeffects GUI (only preset name)
+gsettings set com.github.wwmm.easyeffects last-used-output-preset "$chosen"
