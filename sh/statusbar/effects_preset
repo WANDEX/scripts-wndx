@@ -1,0 +1,22 @@
+#!/bin/sh
+# show active easyeffects preset name
+
+case $BLOCK_BUTTON in
+    3) notify-send " easyeffects" "current preset name" ;;
+    6) "$TERMINAL" -e "$EDITOR" "$0" ;;
+esac
+
+FILE="$CSCRDIR/active_preset"
+CURRENT_PRESET_NAME="$(head -n1 "$FILE")"
+
+# substring in preset name
+case "$CURRENT_PRESET_NAME" in
+    default)
+        preset=""
+    ;;
+    *)
+        preset="$CURRENT_PRESET_NAME"
+    ;;
+esac >/dev/null
+
+printf "%s" "$preset"
