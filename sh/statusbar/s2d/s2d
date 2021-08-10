@@ -64,7 +64,15 @@ get_opt() {
             shift
             draw="$1"
             cc=$(clean_content "$dpath")
-            out_d=$(echo "$cc" | grep "$draw") # TODO unfinished
+            out_d_line=$(echo "$cc" | grep "$draw")
+            out_d="$(echo "$out_d_line" | awk '{print $2}')"
+            case "$out_d" in
+                *\$[0-9]*)
+                    # $3 is the next argument after drawing name ($2 = --)
+                    out_d="$(echo "$out_d" | sed "s/[$][0-9]/$3/")"
+                ;;
+            esac
+            # xsetroot -name "$out_d" # XXX FOR TESTS ONLY!
             ;;
         -h|--help)
             echo "$USAGE"
