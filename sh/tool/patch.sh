@@ -259,10 +259,10 @@ validate() {
             read -p "$Q" -n 1 -r
         fi
         echo "" # move to a new line
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            # handle exits from shell or function but don't exit interactive shell
-            [ "$0" = "$BASH_SOURCE" ] && exit 0 || return 1
-        fi
+        case "$REPLY" in
+            [Yy]) ;;
+            *) exit 0 ;;
+        esac
     fi
 }
 
