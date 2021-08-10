@@ -2,3 +2,4 @@
 // lines with // are ignored and used as comment strings
 // empty lines also ignored
 
+[1-13]candle|bar                ^r00,01,02,$1^^f3^
