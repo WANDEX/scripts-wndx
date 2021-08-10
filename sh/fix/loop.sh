@@ -1,8 +1,7 @@
 #!/bin/sh
 # execute command in infinite loop
 
-# read into variable using 'Here Document' code block
-read -r -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --cmd           Command to execute
@@ -12,8 +11,8 @@ OPTIONS
     -o, --one           Toggle One line mode (replace previous line)
     -s, --sec           Sleep seconds between command execution (default: 5)
 EXAMPLE
-$(basename "$0") -c "date +%R"
-EOF
+$(basename "$0") -c 'date +%R'
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

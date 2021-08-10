@@ -2,8 +2,7 @@
 # simple single line stopwatch & timer
 # without arguments -> start stopwatch, stop it with any key
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -h, --help      Display help
@@ -14,7 +13,7 @@ EXAMPLES
 $(basename "$0") 5m
 $(basename "$0") -t 1h
 $(basename "$0") -t 1h33m7s
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

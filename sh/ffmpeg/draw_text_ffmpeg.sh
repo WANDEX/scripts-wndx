@@ -1,8 +1,7 @@
 #!/bin/sh
 # generate video file with text in the center of the screen
 
-# read into variable using 'Here Document' code block
-read -r -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --background    Background color (default black)
@@ -22,7 +21,7 @@ EXAMPLES:
     $(basename "$0") -t 'Multiline \\
     string \\
     example'
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

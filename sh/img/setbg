@@ -7,8 +7,7 @@ C_MARGS=$(sed -n "/{/,/}/p" "$CACHE" | sed '1d;$d')
 ST_S="string:x-dunst-stack-tag:setbg"
 ST_H="string:x-dunst-stack-tag:hi" # history_ignore
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --clear-margs       Clear magick convert arguments
@@ -24,7 +23,7 @@ EXAMPLES
     $(basename "$0") -i image.jpg -x '--maximize' --margs='-colorspace Gray'
     # and to clear margs cache
     $(basename "$0") -i image.jpg --margs=''
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

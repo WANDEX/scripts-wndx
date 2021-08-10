@@ -16,8 +16,7 @@ else
     fwid="empty"
 fi
 
-# read into variable using 'Here Document' code block
-read -r -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --begin         Download from playlist index (default:1)
@@ -27,12 +26,12 @@ OPTIONS
     -i, --interactive   Explicit interactive playlist end mode
     -p, --path          Destination path where to download
     -q, --quality       Quality of video/stream
-    -r, --restrict      Restrict filenames to only ASCII characters, and avoid "&" and spaces in filenames
+    -r, --restrict      Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url           URL of video/stream
-    -y, --ytdl          Any other youtube-dl native options (specify only inside "")
+    -y, --ytdl          Any other youtube-dl native options (specify only inside \"\")
 EXAMPLES:
-    $(basename "$0") -u "\$URL" -y "--simulate --get-duration" -y "--playlist-items 1-3"
-EOF
+    $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

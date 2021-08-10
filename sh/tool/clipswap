@@ -4,8 +4,7 @@
 # initial values, do not edit them!
 c=0; d=0; p=0; q=0; s=0;
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --content   Show content of primary, clipboard, secondary selections
@@ -14,7 +13,7 @@ OPTIONS
     -p, --paste     Paste primary selection
     -q, --quiet     Toggle quiet mode without notification
     -s, --swap      Swap clipboard & primary content
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

@@ -34,8 +34,7 @@ we had left the ground.
 силуэт зазубренного крыла.
 EOF
 
-# read into variable using 'Here Document' code block
-read -r -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
 get one option specific for font of the current \$TERMINAL and exit.
@@ -47,7 +46,7 @@ get one option specific for font of the current \$TERMINAL and exit.
     -S, --style     Get font style
     -s, --size      Get font size
     -t, --typesize  Get font size type - size/pixelsize
-EOF
+")
 
 width() { echo "$1" | wc --max-line-length; }
 widths() {

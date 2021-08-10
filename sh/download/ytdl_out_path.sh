@@ -5,17 +5,16 @@
 # %(uploader)s/%(title)s.%(ext)s
 # %(uploader)s/%(playlist_title)s/%(playlist_index)003d. %(title)s.%(ext)s
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -h, --help          Display help
 EXAMPLES
 # from stdin pipe
-    youtube-dl --dump-json --no-warnings --playlist-end=1 "\$URL" | $(basename "$0")
+    youtube-dl --dump-json --no-warnings --playlist-end=1 \"\$URL\" | $(basename "$0")
 # from \$1 argument
-    $(basename "$0") "\$JSON_DATA"
-EOF
+    $(basename "$0") \"\$JSON_DATA\"
+")
 
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && echo "$USAGE" && exit 0
 

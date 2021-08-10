@@ -7,8 +7,7 @@ dpath="$abs_dir_path/.drawings"
 [ ! -f "$cpath" ] && printf "%s: %s\n%s\n" "ERROR & EXIT" "not found file:" "$cpath" && exit 1
 [ ! -f "$dpath" ] && printf "%s: %s\n%s\n" "ERROR & EXIT" "not found file:" "$dpath" && exit 1
 
-# read into variable using 'Here Document' code block
-read -r -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --color     Get color by name
@@ -19,7 +18,7 @@ OPTIONS
     -p, --prefix    Add prefix string to output
     -P, --postfix   Add postfix string to output
     --battery       Dynamic battery drawing
-EOF
+")
 
 # read into variable using 'Here Document' code block
 read -r -d '' S2D_MEMO <<- EOF

@@ -3,8 +3,7 @@
 CSCRDIR="${CSCRDIR:-"$HOME"/.cache/cscripts}"
 CACHE="$CSCRDIR"'/rate/rate'
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 GENERAL OPTIONS
     -c, --convert   Convert and get sum of currencies, separated by (+/-) each
@@ -34,8 +33,8 @@ EXAMPLES
     $(basename "$0") 1337 usd in eur
     - Above examples are equal and are valid.
     $(basename "$0") -c 1BTC-10ETH+100LTC
-    $(basename "$0") -o btc,eth,bch -f "%c:%p[%H]" -d '\\\n'
-EOF
+    $(basename "$0") -o btc,eth,bch -f '%c:%p[%H]' -d '\\n'
+")
 
 def_opt() {
     mplen=3 # min price string length as int value

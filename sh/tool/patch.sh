@@ -10,8 +10,7 @@ TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
 SEP='|'; NLS=')'
 ST_S=0; ST_F=0; ST_E=0; ST_TOTAL=0
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -a, --add       Add patch to the end of active_patch_list file
@@ -30,7 +29,7 @@ OPTIONS
                     changing any files.
                     ${RED}(each patch file independently, not a cascade of changes)${END}
     --init          Create patch dir with active_patch_list file inside
-EOF
+")
 
 check_existance() {
     GITRDIR=$(git rev-parse --show-toplevel)

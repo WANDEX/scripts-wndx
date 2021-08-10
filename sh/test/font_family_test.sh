@@ -6,17 +6,16 @@
 # shellcheck source=$ENVSCR/termcolors
 TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --blacklist Comma-separated list of blacklisted font styles
-    -F, --font      Test specified "font family name" styles
-    -f, --family    Get available font family styles for "font family name" or "all"
+    -F, --font      Test specified 'font family name' styles
+    -f, --family    Get available font family styles for 'font family name' or 'all'
     --families      Get all available font family names
     -h, --help      Display help
     -s, --styles    Get available font family styles for current \$TERMINAL font
-EOF
+")
 
 # read into variable using 'Here Document' code block
 # all available font styles presorted

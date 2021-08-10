@@ -18,8 +18,7 @@ FILE="$CONF/shortcuts"
 # remove everything after # character and empty lines with/without spaces
 SHORTCUTS=$(cat "$FILE" | sed "s/[[:space:]]*#.*$//g; /^[[:space:]]*$/d")
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -e, --edit          Edit shortcuts file with \$EDITOR
@@ -27,7 +26,7 @@ OPTIONS
     -l, --list          Show list of all shortcuts
     -p, --pass-through  Print raw path as output
     --exclude-dirs      Exclude paths with directories as last element - /
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

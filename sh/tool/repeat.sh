@@ -1,8 +1,7 @@
 #!/bin/sh
 # auto repeat command (for example xdotool command)
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -c, --command   Command to execute
@@ -10,7 +9,7 @@ OPTIONS
     -s, --sleep     Seconds to sleep between executions (default 0.5)
 EXAMPLE
     $(basename "$0") -c 'xdotool click 1' -s 1.0
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

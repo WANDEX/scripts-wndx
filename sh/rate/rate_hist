@@ -12,8 +12,7 @@ if [ -t 0 ]; then
     # TODO create my own build of st with fresh alpha patch and test 'dmenu "${fwidarr[@]}"'
 fi
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --buy           Buy operation
@@ -29,7 +28,7 @@ INPUT MODE OPTIONS
     -F, --filled        Filled amount of coin
     -p, --price         Price of coin
     -t, --total         Total in currency
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

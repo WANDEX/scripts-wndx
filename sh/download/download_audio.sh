@@ -5,16 +5,15 @@ MUSIC="$HOME"'/Music/'
 PODCAST="$MUSIC"'podcasts/'
 YTM="$MUSIC"'~YTM/'
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -e, --end       If url is playlist - how many items to download (by default all:-1)
     -h, --help      Display help
     -p, --path      Destination path where to download
-    -r, --restrict  Restrict filenames to only ASCII characters, and avoid "&" and spaces in filenames
+    -r, --restrict  Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url       URL to download
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

@@ -4,8 +4,7 @@
 CSCRDIR="${CSCRDIR:-"$HOME"/.cache/cscripts}"
 RATE_FORM="$CSCRDIR"'/rate/rate_form'
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -a, --ascending     Sort list in a ascending manner
@@ -19,7 +18,7 @@ OPTIONS
 EXAMPLE
     # make sort in range of ranks 11-20 (get 10 coins total)
     $(basename "$0") -a -c6 -n20 --top 20 --bot 10
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

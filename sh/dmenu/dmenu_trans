@@ -1,14 +1,13 @@
 #!/bin/sh
 # translate dmenu input or clipboard content and show in notification
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -b, --brief     Show the most relevant translation or its ph. notation only
     -c, --clip      Translate data from clipboard
     -h, --help      Display help
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options

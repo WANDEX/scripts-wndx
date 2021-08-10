@@ -4,8 +4,7 @@
 
 RATE_FORM="$CSCRDIR"'/rate/rate_form'
 
-# read into variable using 'Here Document' code block
-read -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -e, --exclude       Comma separated list of the column names to exclude:
@@ -17,7 +16,7 @@ OPTIONS
     --bar               Special oneshot mode without loop, but with temp file
     --inf               Execution in infinite loop
     --debug             Debug mode -> echo INFO messages
-EOF
+")
 
 get_opt() {
     # Parse and read OPTIONS command-line options
