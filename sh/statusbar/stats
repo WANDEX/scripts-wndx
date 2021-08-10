@@ -1,0 +1,4 @@
+#!/bin/sh
+# output $(week current day calc total) and color background gradient based on value after sertain date time
+out="$(week current day calc total)"
+printf "%s" "$out"
