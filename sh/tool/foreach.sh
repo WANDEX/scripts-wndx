@@ -5,26 +5,25 @@
 self="$(basename "$0")"
 f="${BLD}${ITQ}"
 
-# read into variable using 'Here Document' code block
-read -r -d '' USAGE <<- EOF
+USAGE=$(printf "%s" "\
 Usage: 'any multiline data' | ${self} [ARGS...]
 USAGE ${BLD}EXAMPLES:${END}
 
 ${f}# grep all files with pattern and sed -i replace pattern strings:${END}
-grep -r '\$BASH_SOURCE' -l | foreach.sh | xargs sed -i 's/\$BASH_SOURCE/"\$0"/'
+grep -r '\$BASH_SOURCE' -l | foreach.sh | xargs sed -i 's/\$BASH_SOURCE/\"\$0\"/'
 
-${f}# grep from each "*.diff" file in current dir:${END}
-find . -type f -name "*.diff" | foreach.sh | xargs grep -i "Only in"
+${f}# grep from each *.diff file in current dir:${END}
+find . -type f -name *.diff | foreach.sh | xargs grep -i 'Only in'
 
-${f}# sed -i delete lines with pattern strings in all "*.diff" files at current dir:${END}
-find . -type f -name "*.diff" | foreach.sh | xargs sed -i "/Only in/d"
+${f}# sed -i delete lines with pattern strings in all *.diff files at current dir:${END}
+find . -type f -name *.diff | foreach.sh | xargs sed -i '/Only in/d'
 
-${f}# sed -i replace pattern strings in all "*.diff" files at current dir:${END}
-find . -type f -name "*.diff" | foreach.sh | xargs sed -i "s/Only in/SED_REPLACEMENT/g"
+${f}# sed -i replace pattern strings in all *.diff files at current dir:${END}
+find . -type f -name *.diff | foreach.sh | xargs sed -i 's/Only in/SED_REPLACEMENT/g'
 
 ${f}# find all files in current dir except *bad* and *out*, sort, concatenate and redirect into file:${END}
-find . -type f -name "*.diff" \( ! -iname "*bad*" ! -iname "*out*" \) | sort -n | foreach.sh | xargs cat > bad.diff
-EOF
+find . -type f -name *.diff \( ! -iname "*bad*" ! -iname "*out*" \) | sort -n | foreach.sh | xargs cat > bad.diff
+")
 
 case "$1" in
     h|-h|--help|usage)
