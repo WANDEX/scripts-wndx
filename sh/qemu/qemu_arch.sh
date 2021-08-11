@@ -14,8 +14,10 @@
 #
 # to find in list of usb devices (vendorid:productid,etc.) $ lsusb
 
-img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic.cow"
-
+img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic-auto-wssh.cow"
 
 # shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements.
-qemu-system-x86_64 $@ -m 4G -enable-kvm -cpu host -usbdevice tablet "$img"
+qemu-system-x86_64 $@ -m 4G -enable-kvm -cpu host -usbdevice tablet \
+-device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp:127.0.0.1:9001-:22 \
+-device usb-ehci,id=ehci -device usb-host,bus=ehci.0,vendorid=0x1307,productid=0x0165 \
+"$img"
