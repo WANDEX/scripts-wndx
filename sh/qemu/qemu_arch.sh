@@ -13,6 +13,9 @@
 # -device usb-ehci,id=ehci -device usb-host,bus=ehci.0,vendorid=0x1307,productid=0x0165
 #
 # to find in list of usb devices (vendorid:productid,etc.) $ lsusb
+#
+# to mount usb-flash:
+# sudo mount -o defaults,uid=1000,gid=998 -v UUID=C0AB-9DEE "/mnt/usb_qemu" >/dev/null 2>&1
 
 img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic-auto-wssh.cow"
 
