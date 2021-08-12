@@ -17,7 +17,10 @@
 # to mount usb-flash:
 # sudo mount -o defaults,uid=1000,gid=998 -v UUID=C0AB-9DEE "/mnt/usb_qemu" >/dev/null 2>&1
 
-img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic-auto-wssh.cow"
+# img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic.cow"
+# img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic-auto.cow"
+# img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-basic-auto-wssh.cow"
+img="$HOME/Downloads/QEMU_IMAGES/arch/overlays/arch-first-full.cow"
 
 # shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements.
 qemu-system-x86_64 $@ -m 4G -enable-kvm -cpu host -usbdevice tablet \
