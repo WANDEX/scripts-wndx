@@ -30,7 +30,6 @@ get_opt() {
     del_columns="p,m,r"       # list of columns to delete
     cln=0
     num=10
-    num_total=$(cat "$RATE_FORM" | wc -l)
     prefix=""
     slp=3 # sleep time between printing lines
     eval set -- "$OPTIONS"
@@ -82,7 +81,10 @@ get_opt() {
                     ;;
                 *) num=$1 ;;
             esac
-            [ $num -gt $num_total ] && num=$num_total
+            if [ -f "$RATE_FORM" ]; then
+                num_total=$(cat "$RATE_FORM" | wc -l)
+                [ "$num" -gt "$num_total" ] && num=$num_total
+            fi
             ;;
         -p|--prefix)
             shift
@@ -117,6 +119,10 @@ get_opt() {
         shift
     done
 }
+
+get_opt "$@"
+
+[ ! -f "$RATE_FORM" ] && exit 1 # silently exit if file does not exist
 
 sort_list() {
     if [ -z "$colnum" ]; then
@@ -196,7 +202,6 @@ term() {
 }
 
 main() {
-    get_opt "$@"
     sort_list
     # not executes here! only array of raw arguments!
     CMD=(rate_sort -c $colnum -n $num ${top[@]} ${bot[@]} ${ad[@]})
