@@ -334,7 +334,7 @@ get_date() {
             fi
         fi
     else
-        echo -e "$CACHE\nDoes not exist, or not regular file -> exit."
+        [ $debug -eq 1 ] && notify-send "[rate]" "$CACHE\nDoes not exist, or not regular file -> exit."
         exit 1
     fi
 }
