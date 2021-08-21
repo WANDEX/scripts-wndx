@@ -1,15 +1,16 @@
 #!/bin/sh
-# cron script that pushes to gist output of gfclone script
+# cron script that pushes to the repo output of repos script
+# .git dir should exist at $DIR for git commands!
 
 cd ~ || exit # cd to home dir
 
-name="gfclone"
+name="repos"
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
 SCRIPTS="${SCRIPTS:-"$HOME/source/scripts"}"
 
 BN="$(basename "$0")"
-DIR="$CSCRDIR/cron/gfclone"
+DIR="$CSCRDIR/cron/packages"
 [ ! -d "$DIR" ] && mkdir -p "$DIR"
 CACHE="$DIR/$name"
 
@@ -28,9 +29,9 @@ case "$?" in
         cd "$DIR" || exit
         [ ! -d .git ] && exit # exit if current dir doesn't have .git dir
         time="$(date "+%T")"
-        message="$(printf "%s\n\n%s\n" "auto commit at: $time" "$changes")"
+        message="$(printf "%s\n\n%s\n" "repos auto commit at: $time" "$changes")"
         echo "$output" > "$CACHE" # save output to cache
-        git add .
+        git add repos # add only repos file!
         git commit -m "$message"
         git push origin
         ;;
