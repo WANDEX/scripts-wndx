@@ -1,5 +1,5 @@
 #!/bin/sh
-# cron script that pushes to gist explicitly installed packages
+# cron script that pushes to the repo explicitly installed packages
 # pacman, aur, pip
 # .git dir should exist at $DIR for git commands!
 
@@ -35,8 +35,8 @@ if [ "$_pac" ] || [ "$_aur" ] || [ "$_pip" ]; then
     cd "$DIR" || exit
     [ ! -d .git ] && exit # exit if current dir doesn't have .git dir
     time="$(date "+%T")"
-    message="$(printf "%s\n\n%s\n\n%s\n\n%s\n" "auto commit at: $time" "$achanges" "$pchanges" "$pipanges")"
-    git add .
+    message="$(printf "%s\n\n%s\n\n%s\n\n%s\n" "packages auto commit at: $time" "$achanges" "$pchanges" "$pipanges")"
+    git add --all -- ':!repos' # add all (except repos file)
     git commit -m "$message"
     git push origin
 fi
