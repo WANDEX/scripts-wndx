@@ -1,20 +1,22 @@
 #!/bin/sh
-
-# Prints the current volume or 🔇 if muted.
+# prints the current sink volume or 🔇 if muted.
 
 # use $1 or $SINK0 env variable if empty
 SINK="${1:-"$SINK0"}"
 
+# silently exit if sink does not exist
+pamixer --list-sinks | grep -sq "$SINK" >/dev/null 2>&1 || exit 1
+
 case $BLOCK_BUTTON in
-	1) pamixer --sink "$SINK" -t ;;
-	2) setsid -f "$TERMINAL" -e pulsemixer ;;
-	4) pamixer --sink "$SINK" --allow-boost -i 10 ;;
-	5) pamixer --sink "$SINK" --allow-boost -d 10 ;;
-	3) notify-send "📢 Volume module" "\- Shows volume 🔊, 🔇 if muted.
+    1) pamixer --sink "$SINK" -t ;;
+    2) setsid -f "$TERMINAL" -e pulsemixer ;;
+    4) pamixer --sink "$SINK" --allow-boost -i 10 ;;
+    5) pamixer --sink "$SINK" --allow-boost -d 10 ;;
+    3) notify-send "📢 Volume module" "\- Shows volume 🔊, 🔇 if muted.
 - Left click to mute.
 - Middle click to open pulsemixer.
 - Scroll to change." ;;
-	6) "$TERMINAL" -e "$EDITOR" "$0" ;;
+    6) "$TERMINAL" -e "$EDITOR" "$0" ;;
 esac
 
 # substring in sink name
