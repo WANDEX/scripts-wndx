@@ -1,8 +1,8 @@
 #!/bin/sh
-# get a menu of emojis to copy script.
+# get a menu of emojis to copy script. (-g option requires dmenu 'grid' patch)
 
 # Get user selection via dmenu from emoji file.
-chosen=$(cut -d ';' -f1 "$SCRIPTS/sh/dmenu/.emoji" | dmenu -fn JoyPixels-18  -i -l 30 | sed "s/ .*//")
+chosen=$(cut -d ';' -f1 "$SCRIPTS/sh/dmenu/.emoji" | dmenu -i -fn JoyPixels-18 -l 18 -g 5 | sed "s/ .*//")
 
 # Exit if none chosen.
 [ -z "$chosen" ] && exit
