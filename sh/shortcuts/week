@@ -1,5 +1,6 @@
 #!/bin/sh
 # shortcut - to edit last/previous or current week pomodoro file by default
+# also possible to calculate spent time on given slices and/or tasks
 
 case "$1" in
     -[0-9]*) file="$(date -d "$1" +'week-%V-%Y.txt')" ;; # (relative) example: -1week
