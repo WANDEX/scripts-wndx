@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Download in Music dir audio only stream and convert to audio file format
 
 MUSIC="$HOME"'/Music/'
@@ -32,11 +32,11 @@ get_opt() {
             case $1 in
                 -1) END=-1 ;; # get full playlist
                 0*)
-                    printf "($1)\n^ unsupported number! exit.\n"
+                    printf "(%s)\n^ unsupported number! exit.\n" "$1"
                     exit 1
                     ;;
                 ''|*[!0-9]*)
-                    printf "($1)\n^ IS NOT A NUMBER OF INT! exit.\n"
+                    printf "(%s)\n^ IS NOT A NUMBER OF INT! exit.\n" "$1"
                     exit 1
                     ;;
                 *) END=$1 ;;
@@ -123,7 +123,7 @@ case "$path" in
         OPT=( --no-playlist )
     ;;
     *)
-        if [ ! -z "$path" ]; then
+        if [ -n "$path" ]; then
             # add/replace 0 or more occurrences of '/' at the end, with one /
             _path=$(echo "$path" | sed "s/[/]*$/\//")
             OUT="$_path"'%(title)s.%(ext)s'
@@ -143,8 +143,9 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
     notify-send -u critical -t 5000 "ERROR" "[AUDIO] Something gone wrong!"
 
 if [[ $_lt ]]; then
-    cd "$_lt"
+    cd "$_lt" || exit
     match=$(find . -maxdepth 1 -not -regex '\./S..E...*\.mp3' -not -name "*.jpg" -not -name "\." | sed 's,\.\/,,')
+    # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
     new_name=$(echo "$match" | sed 's/\(.*\) \(S..E..\)/\2 - \1/')
     mv -f "$match" "$new_name"
     echo -e "downloaded file renamed:\n$match\t:old\n$new_name\t:new"
