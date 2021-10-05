@@ -2,6 +2,11 @@
 # shortcut - to edit last/previous or current week pomodoro file by default
 # also possible to calculate spent time on given slices and/or tasks
 
+OLDIFS="$IFS"
+# set variable to a new line, to use later as a value in Internal Field Separator
+NLIFS='
+'
+
 case "$1" in
     -[0-9]*) file="$(date -d "$1" +'week-%V-%Y.txt')" ;; # (relative) example: -1week
     last|prev|l|p) file="$(date -d 'last week' +'week-%V-%Y.txt')" ;;
@@ -101,10 +106,7 @@ case "$3" in
         old_sep="$(echo "$slice" | head -n1 | grep -so "$rsep")"
         dgrep="$(echo "$slice" | grep -so "${hm}.*${hm}")"
         hm_pairs="$(echo "$dgrep" | sed "s/$rsep/-/")"
-        OLDIFS="$IFS"
-        # set Internal Field Separator to new line
-        IFS='
-        '
+        IFS="$NLIFS"
         for line in $hm_pairs; do
             hm_fr="$(echo "$line" | cut -d- -f1)"
             hm_to="$(echo "$line" | cut -d- -f2)"
