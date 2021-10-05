@@ -101,6 +101,10 @@ case "$3" in
         old_sep="$(echo "$slice" | head -n1 | grep -so "$rsep")"
         dgrep="$(echo "$slice" | grep -so "${hm}.*${hm}")"
         hm_pairs="$(echo "$dgrep" | sed "s/$rsep/-/")"
+        OLDIFS="$IFS"
+        # set Internal Field Separator to new line
+        IFS='
+        '
         for line in $hm_pairs; do
             hm_fr="$(echo "$line" | cut -d- -f1)"
             hm_to="$(echo "$line" | cut -d- -f2)"
@@ -112,6 +116,7 @@ case "$3" in
             # slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")" # sed is unstable
             slice="${slice/${hm_fr}${old_sep}${hm_to}/$new}" # not POSIX sh compliant
         done
+        IFS="$OLDIFS" # restore
     ;;
     '') # if $3 empty, but $2 not
         if [ -n "$2" ]; then
