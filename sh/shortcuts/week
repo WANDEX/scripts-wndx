@@ -42,14 +42,14 @@ if [ -n "$2" ]; then
         [Ww]eek)            grep_week=1;  slice="$(cat "$fpath")" ;; # for the full week
         [Tt]oday|[Dd]ay)    grep_day "$(date +%A)" ;;
         [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
-        [Mm]|[Mm]onday)     grep_day "Monday"    ;;
-        [Tt]|[Tt]uesday)    grep_day "Tuesday"   ;;
-        [Ww]|[Ww]ednesday)  grep_day "Wednesday" ;;
-        [Tt]h|[Tt]hursday)  grep_day "Thursday"  ;;
-        [Ff]|[Ff]riday)     grep_day "Friday"    ;;
-        [Ss]a|[Ss]aturday)  grep_day "Saturday"  ;;
-        [Ss]u|[Ss]unday)    grep_day "Sunday"    ;;
-        *) ;; # grep from overall history
+        [Mm]o|[Mm]on|[Mm]onday)    grep_day "Monday"    ;;
+        [Tt]u|[Tt]ue|[Tt]uesday)   grep_day "Tuesday"   ;;
+        [Ww]e|[Ww]ed|[Ww]ednesday) grep_day "Wednesday" ;;
+        [Tt]h|[Tt]hu|[Tt]hursday)  grep_day "Thursday"  ;;
+        [Ff]r|[Ff]ri|[Ff]riday)    grep_day "Friday"    ;;
+        [Ss]a|[Ss]at|[Ss]aturday)  grep_day "Saturday"  ;;
+        [Ss]u|[Ss]un|[Ss]unday)    grep_day "Sunday"    ;;
+        *) ;; # else -> grep from overall history
     esac
     grep_query
 fi
