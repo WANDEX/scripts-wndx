@@ -65,17 +65,6 @@ hm_to_sec() { date --date="$1" +%s ;} # convert time to seconds
 sec_diff() {
     # subtract and return difference in seconds
     _sec_diff="$(($1-$2))"
-    case "$_sec_diff" in
-        # if seconds are negative -> recalculate properly
-        # example of wrong calculation without this fix:
-        # 21:20-00:17 -> (-75780)seconds -> {02:57}
-        -*)
-            midnight_seconds="1633467600" # same as: hm_to_sec "00:00"
-            _before_midnight="$(("$midnight_seconds-$1"))"
-            _after_midnight="$(("$2-$midnight_seconds"))"
-            _sec_diff="$(("$_before_midnight+$_after_midnight"))"
-        ;;
-    esac
     echo "$_sec_diff"
 }
 sec_to_hm() { date --date="@$1" -u +%R ;} # convert seconds to HH:MM
