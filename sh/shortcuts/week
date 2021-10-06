@@ -2,6 +2,8 @@
 # shortcut - to edit last/previous or current week pomodoro file by default
 # also possible to calculate spent time on given slices and/or tasks
 
+PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
+
 OLDIFS="$IFS"
 # set variable to a new line, to use later as a value in Internal Field Separator
 NLIFS='
@@ -15,48 +17,75 @@ case "$1" in
     *) search_query="$1"; file="$(date +'week-%V-%Y.txt')" ;;
 esac
 
-PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
-fpath=$(find "$PMDRD" -type f -name "$file")
-[ ! -f "$fpath" ] && printf "%s\n${RED}%s${END}\n" "$file" "FNF. exit." && exit 1
+find_week_file() {
+    fpath=$(find "$PMDRD" -type f -name "$file")
+    if [ ! -f "$fpath" ]; then
+        printf "%s\n${RED}%s${END}\n" "$file" "FNF. exit."
+        exit 1
+    fi
+}
 
-grep_day() { slice="$(grep -s "^$1" "$fpath")" ;}
+find_all_week_files() {
+    _fall="$(find "$PMDRD" -type f \( ! -iname "TODO*" \) -type f -printf '%P\n' | sort -V)"
+    # exclude week files before $1 week file
+    if [ -n "$1" ]; then
+        if echo "$_fall" | grep -Fq "$1"; then
+            _fall="$(echo "$_fall" | awk "/$1/{found=1} found")" # all lines after pattern incl.
+        fi
+    fi
+    echo "$_fall"
+}
+
+grep_day() {
+    find_week_file
+    slice="$(grep -s "^$1" "$fpath")"
+}
 
 grep_query() {
-    if [ -n "$search_query" ]; then
+    if [ -n "$slice" ] && [ -n "$search_query" ]; then
+        slice="$(echo "$slice" | grep -F -s "$search_query")"
+    elif [ -n "$search_query" ]; then
         cd "$PMDRD" || exit 1
-        files="$(find . -type f \( ! -iname "TODO*" \) | sort -V)"
-        if [ "$grep_month" ]; then
-            lmwfn="$(date -d "last month +1week" "+week-%V-%Y.txt")"
-            files="$(echo "$files" | awk "/$lmwfn/{found=1} found")" # all lines after pattern incl.
+        if [ "$grep_all" ]; then
+            files="$(find_all_week_files)"
         elif [ "$grep_year" ]; then
-            lywfn="$(date -d "last year +1week" "+week-%V-%Y.txt")"
-            files="$(echo "$files" | awk "/$lywfn/{found=1} found")" # all lines after pattern incl.
+            _wf="$(date -d "last year +1week" "+week-%V-%Y.txt")"
+            files="$(find_all_week_files "$_wf")"
+        elif [ "$grep_month" ]; then
+            _wf="$(date -d "last month +1week" "+week-%V-%Y.txt")"
+            files="$(find_all_week_files "$_wf")"
+        else
+            find_week_file
+            files="$fpath"
         fi
         files_in_one_line="$(echo "$files" | tr '\n' ' ')"
         # shellcheck disable=SC2086 # (Double quote to prevent globbing and word splitting)
         MEGACAT="$(cat $files_in_one_line)" # all files split by space
-        slice="$(echo "$MEGACAT" | grep -s "$search_query")"
+        slice="$(echo "$MEGACAT" | grep -F -s "$search_query")"
+    elif [ -z "$slice" ]; then
+        find_week_file
+        slice="$(cat "$fpath")"
     fi
 }
 
 if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
-        -[0-9]*)            grep_day "$(date -d "$2" +%A)" ;; # (relative) example: -1day
-        [Yy]ear)            grep_year=1   ;;
-        [Mm]onth)           grep_month=1  ;;
-        [iI][Ww]eek)        grep_iweek=1; slice="$(cat "$fpath")" ;; # for the full week by days individually
-        [Ww]eek)            grep_week=1;  slice="$(cat "$fpath")" ;; # for the full week
-        [Tt]oday|[Dd]ay)    grep_day "$(date +%A)" ;;
-        [Yy]esterday)       grep_day "$(date --date=yesterday +%A)" ;;
-        [Mm]o|[Mm]on|[Mm]onday)    grep_day "Monday"    ;;
-        [Tt]u|[Tt]ue|[Tt]uesday)   grep_day "Tuesday"   ;;
-        [Ww]e|[Ww]ed|[Ww]ednesday) grep_day "Wednesday" ;;
-        [Tt]h|[Tt]hu|[Tt]hursday)  grep_day "Thursday"  ;;
-        [Ff]r|[Ff]ri|[Ff]riday)    grep_day "Friday"    ;;
-        [Ss]a|[Ss]at|[Ss]aturday)  grep_day "Saturday"  ;;
-        [Ss]u|[Ss]un|[Ss]unday)    grep_day "Sunday"    ;;
-        *) ;; # else -> grep from overall history
+        -[0-9]*)                        grep_day "$(date -d "$2" +%A)" ;; # (relative) example: -1day
+        [Tt]oday)                       grep_day "$(date +%A)" ;;
+        [Yy]esterday)                   grep_day "$(date --date=yesterday +%A)" ;;
+        [Mm]o|[Mm]on|[Mm]onday)         grep_day "Monday"    ;;
+        [Tt]u|[Tt]ue|[Tt]uesday)        grep_day "Tuesday"   ;;
+        [Ww]e|[Ww]ed|[Ww]ednesday)      grep_day "Wednesday" ;;
+        [Tt]h|[Tt]hu|[Tt]hursday)       grep_day "Thursday"  ;;
+        [Ff]r|[Ff]ri|[Ff]riday)         grep_day "Friday"    ;;
+        [Ss]a|[Ss]at|[Ss]aturday)       grep_day "Saturday"  ;;
+        [Ss]u|[Ss]un|[Ss]unday)         grep_day "Sunday"    ;;
+        [Aa]ll|[Hh]istory|[Oo]verall)   grep_all=1   ;; # over all history
+        [Yy]ear)                        grep_year=1  ;;
+        [Mm]onth)                       grep_month=1 ;;
+        [Ww]eek)                        grep_week=1  ;; # full week
+        [iI][Ww]eek)                    grep_iweek=1 ;; # full week by days individually
     esac
     grep_query
 fi
@@ -197,4 +226,5 @@ if [ -n "$slice" ]; then
     exit 0
 fi
 
+find_week_file
 $EDITOR "$fpath"
