@@ -9,6 +9,7 @@ NLIFS='
 
 case "$1" in
     -[0-9]*) file="$(date -d "$1" +'week-%V-%Y.txt')" ;; # (relative) example: -1week
+    +*) file="$(date -d "$(echo "$1" | sed "s/^+//")" +'week-%V-%Y.txt')" ;; # find week file by date example: +2021-07-20
     last|prev|l|p) file="$(date -d 'last week' +'week-%V-%Y.txt')" ;;
     c|cur|curr|current) file="$(date +'week-%V-%Y.txt')" ;;
     *) search_query="$1"; file="$(date +'week-%V-%Y.txt')" ;;
