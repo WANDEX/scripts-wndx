@@ -117,10 +117,8 @@ total_slice() {
 case "$3" in
     calc)
         hm="[[:digit:]][[:digit:]]:[[:digit:]][[:digit:]]"
-        rsep=" . " # sed regex for matching separator between (HH:MM . HH:MM)
-        old_sep="$(echo "$slice" | head -n1 | grep -so "$rsep")"
         dgrep="$(echo "$slice" | grep -so "${hm}.*${hm}")"
-        hm_pairs="$(echo "$dgrep" | sed "s/$rsep/-/")"
+        hm_pairs="$(echo "$dgrep" | sed -E "s/.?($hm).*($hm).?/\1-\2/")"
         IFS="$NLIFS"
         for line in $hm_pairs; do
             hm_fr="$(echo "$line" | cut -d- -f1)"
@@ -129,9 +127,11 @@ case "$3" in
             sec_to="$(hm_to_sec "$hm_to")"
             seconds="$(sec_diff "$sec_to" "$sec_fr")"
             new="$(sec_to_hm "$seconds")"
+            sleep 0.0001 # somehow fixes relatively rare calculation/replacement issue
+            # printf "%s\t%s\t%s\n" "$line" "[$hm_fr-$hm_to]($seconds)" "{$new}" # only for debugging
             # replace the original time interval with the new calculated time spent
-            # slice="$(echo "$slice" | sed "s/${hm_fr}${old_sep}${hm_to}/$new/")" # sed is unstable
-            slice="${slice/${hm_fr}${old_sep}${hm_to}/$new}" # not POSIX sh compliant
+            slice="$(echo "$slice" | sed "s/${hm_fr}.*${hm_to}/${new}/")" # sometimes sed is unstable
+            # slice="${slice/${hm_fr}.*${hm_to}/$new}" # slower than sed & not POSIX sh compliant
         done
         IFS="$OLDIFS" # restore
     ;;
