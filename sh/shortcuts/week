@@ -16,7 +16,8 @@ case "$1" in
 esac
 
 PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
-fpath="$PMDRD/$file"
+fpath=$(find "$PMDRD" -type f -name "$file")
+[ ! -f "$fpath" ] && printf "%s\n${RED}%s${END}\n" "$file" "FNF. exit." && exit 1
 
 grep_day() { slice="$(grep -s "^$1" "$fpath")" ;}
 
