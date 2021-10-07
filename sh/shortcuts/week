@@ -44,6 +44,7 @@ grep_day() {
 grep_query() {
     if [ -n "$slice" ] && [ -n "$search_query" ]; then
         slice="$(echo "$slice" | grep -F -s "$search_query")"
+        [ -z "$slice" ] && echo "${YEL}NO SEARCH RESULTS FOUND. EXIT${END}" && exit 2
     elif [ -n "$search_query" ]; then
         cd "$PMDRD" || exit 1
         if [ "$grep_all" ]; then
@@ -62,6 +63,7 @@ grep_query() {
         # shellcheck disable=SC2086 # (Double quote to prevent globbing and word splitting)
         MEGACAT="$(cat $files_in_one_line)" # all files split by space
         slice="$(echo "$MEGACAT" | grep -F -s "$search_query")"
+        [ -z "$slice" ] && echo "${YEL}NO SEARCH RESULTS FOUND. EXIT${END}" && exit 2
     elif [ -z "$slice" ]; then
         find_week_file
         slice="$(cat "$fpath")"
