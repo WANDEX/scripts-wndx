@@ -1,9 +1,9 @@
 #!/bin/bash
 # Download in Music dir audio only stream and convert to audio file format
 
-MUSIC="$HOME"'/Music/'
-PODCAST="$MUSIC"'podcasts/'
-YTM="$MUSIC"'~YTM/'
+MUSIC="$HOME/Music/1337"
+PODCAST="$MUSIC/podcasts"
+YTM="$MUSIC/YTM"
 
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
@@ -71,27 +71,27 @@ get_opt "$@"
 # substring
 case "$URL" in
     *"bandcamp"*)
-        OUT="$MUSIC"'~bandcamp/%(artist)s/%(playlist)s/%(playlist_index)02d. %(title)s.%(ext)s'
+        OUT="$MUSIC/"'bandcamp/%(artist)s/%(playlist)s/%(playlist_index)02d. %(title)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"soundcloud"*"/sets/"*|*"soundcloud"*"/albums"*)
-        OUT="$MUSIC"'~soundcloud/%(uploader)s/%(playlist)s/%(playlist_index)02d. %(fulltitle)s.%(ext)s'
+        OUT="$MUSIC/"'soundcloud/%(uploader)s/%(playlist)s/%(playlist_index)02d. %(fulltitle)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"soundcloud"*)
-        OUT="$MUSIC"'~soundcloud/%(uploader)s/%(playlist)s/%(fulltitle)s.%(ext)s'
+        OUT="$MUSIC/"'soundcloud/%(uploader)s/%(playlist)s/%(fulltitle)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"youtu"*"playlist"*)
-        OUT="$MUSIC"'~youtube/%(playlist_title)s/%(playlist_index)02d. %(title)s.%(ext)s'
+        OUT="$MUSIC/"'youtube/%(playlist_title)s/%(playlist_index)02d. %(title)s.%(ext)s'
         OPT=()
     ;;
     *"youtu"*)
-        OUT="$MUSIC"'~youtube/%(title)s.%(ext)s'
+        OUT="$MUSIC/"'youtube/%(title)s.%(ext)s'
         OPT=()
     ;;
     *)
-        OUT="$MUSIC"'~other/%(title)s.%(ext)s'
+        OUT="$MUSIC/"'other/%(title)s.%(ext)s'
         OPT=()
     ;;
 esac >/dev/null
@@ -99,26 +99,26 @@ esac >/dev/null
 # substring
 case "$path" in
     "kdi"|"Kdi"|"KDI")
-        _kdi="$PODCAST"'KDI/'
+        _kdi="$PODCAST/KDI/"
         OUT="$_kdi"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "koda"|"Koda")
-        _koda="$PODCAST"'Koda-Koda/'
+        _koda="$PODCAST/Koda-Koda/"
         OUT="$_koda"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "lt"|"launch")
-        _lt="$PODCAST"'Launch Tomorrow Podcast/'
+        _lt="$PODCAST/Launch Tomorrow Podcast/"
         OUT="$_lt"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "podcast"|"Podcast")
-        OUT="$PODCAST"'%(title)s.%(ext)s'
+        OUT="$PODCAST/%(title)s.%(ext)s"
         OPT=( --no-playlist )
     ;;
     "ytm"|"Ytm"|"YTM")
-        _ytm="$YTM"'RNDM/%(uploader)s/'
+        _ytm="$YTM/RNDM/%(uploader)s/"
         OUT="$_ytm"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
