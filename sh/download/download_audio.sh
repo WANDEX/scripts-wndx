@@ -142,12 +142,4 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
     notify-send -u normal -t 8000 "COMPLETED" "[AUDIO] Downloading and Converting." || \
     notify-send -u critical -t 5000 "ERROR" "[AUDIO] Something gone wrong!"
 
-if [[ $_lt ]]; then
-    cd "$_lt" || exit
-    match=$(find . -maxdepth 1 -not -regex '\./S..E...*\.mp3' -not -name "*.jpg" -not -name "\." | sed 's,\.\/,,')
-    # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
-    new_name=$(echo "$match" | sed 's/\(.*\) \(S..E..\)/\2 - \1/')
-    mv -f "$match" "$new_name"
-    echo -e "downloaded file renamed:\n$match\t:old\n$new_name\t:new"
-fi
 
