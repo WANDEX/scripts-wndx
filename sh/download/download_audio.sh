@@ -71,27 +71,33 @@ get_opt "$@"
 # substring
 case "$URL" in
     *"bandcamp"*)
-        OUT="$MUSIC/"'bandcamp/%(artist)s/%(playlist)s/%(playlist_index)02d. %(title)s.%(ext)s'
+        PD="$MUSIC/bandcamp/"
+        OUT="$PD"'%(artist)s/%(playlist)s/%(playlist_index)02d. %(title)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"soundcloud"*"/sets/"*|*"soundcloud"*"/albums"*)
-        OUT="$MUSIC/"'soundcloud/%(uploader)s/%(playlist)s/%(playlist_index)02d. %(fulltitle)s.%(ext)s'
+        PD="$MUSIC/soundcloud/"
+        OUT="$PD"'%(uploader)s/%(playlist)s/%(playlist_index)02d. %(fulltitle)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"soundcloud"*)
-        OUT="$MUSIC/"'soundcloud/%(uploader)s/%(playlist)s/%(fulltitle)s.%(ext)s'
+        PD="$MUSIC/soundcloud/"
+        OUT="$PD"'%(uploader)s/%(playlist)s/%(fulltitle)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"youtu"*"playlist"*)
-        OUT="$MUSIC/"'youtube/%(playlist_title)s/%(playlist_index)02d. %(title)s.%(ext)s'
+        PD="$MUSIC/youtube/"
+        OUT="$PD"'%(playlist_title)s/%(playlist_index)02d. %(title)s.%(ext)s'
         OPT=()
     ;;
     *"youtu"*)
-        OUT="$MUSIC/"'youtube/%(title)s.%(ext)s'
+        PD="$MUSIC/youtube/"
+        OUT="$PD"'%(title)s.%(ext)s'
         OPT=()
     ;;
     *)
-        OUT="$MUSIC/"'other/%(title)s.%(ext)s'
+        PD="$MUSIC/other/"
+        OUT="$PD"'%(title)s.%(ext)s'
         OPT=()
     ;;
 esac >/dev/null
@@ -99,34 +105,35 @@ esac >/dev/null
 # substring
 case "$path" in
     "kdi"|"Kdi"|"KDI")
-        _kdi="$PODCAST/KDI/"
-        OUT="$_kdi"'%(title)s.%(ext)s'
+        PD="$PODCAST/KDI/"
+        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "koda"|"Koda")
-        _koda="$PODCAST/Koda-Koda/"
-        OUT="$_koda"'%(title)s.%(ext)s'
+        PD="$PODCAST/Koda-Koda/"
+        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "lt"|"launch")
-        _lt="$PODCAST/Launch Tomorrow Podcast/"
-        OUT="$_lt"'%(title)s.%(ext)s'
+        PD="$PODCAST/Launch Tomorrow Podcast/"
+        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "podcast"|"Podcast")
-        OUT="$PODCAST/%(title)s.%(ext)s"
+        PD="$PODCAST/"
+        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "ytm"|"Ytm"|"YTM")
-        _ytm="$YTM/RNDM/%(uploader)s/"
-        OUT="$_ytm"'%(title)s.%(ext)s'
+        PD="$YTM/RNDM/"
+        OUT="$PD"'%(uploader)s/%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     *)
         if [ -n "$path" ]; then
             # add/replace 0 or more occurrences of '/' at the end, with one /
-            _path=$(echo "$path" | sed "s/[/]*$/\//")
-            OUT="$_path"'%(title)s.%(ext)s'
+            PD="$(echo "$path" | sed "s/[/]*$/\//")"
+            OUT="$PD"'%(title)s.%(ext)s'
             OPT=( --no-playlist )
         fi
     ;;
