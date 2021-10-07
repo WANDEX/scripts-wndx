@@ -27,12 +27,12 @@ if [ -r "$AUTOFILE" ]; then
         DST="string:x-dunst-stack-tag"
         bg="string:bgcolor:#9147FF"
         fg="string:fgcolor:#EFEFF1"
-        dunstify -h "$DST:hi" -h "$bg" -h "$fg" "(AUTO) mpvu:" "$twitch_channel"
+        dunstify -h "$DST:hi" -h "$bg" -h "$fg" "(AUTO) mpvu:" "$twitch_channel\n"
         setsid -f mpvu -u "$url"
     fi
 fi
 
-ACTION=$(dunstify -u "$urgency" -A "default,mpvu" -A "clip,url" "$summary" "$body")
+ACTION=$(dunstify -u "$urgency" -A "default,mpvu" -A "clip,url" "$summary" "$body\n")
 
 case "$ACTION" in
 "default")
