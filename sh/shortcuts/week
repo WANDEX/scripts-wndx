@@ -34,6 +34,15 @@ find_all_week_files() {
     if [ -n "$1" ]; then
         if echo "$_fall" | grep -Fq "$1"; then
             _fall="$(echo "$_fall" | awk "/$1/{found=1} found")" # all lines after pattern incl.
+        else
+            # if exact week file not found -> find closest one after that week date
+            # to do that: we append fake week file entry (not really exist!), then sort again
+            _fake_week_file="$1"
+            # FIXME: if week file in subdir -> sorting will be wrong! -> which result in wrong slice.
+            _fall="$(printf "%s\n%s\n" "$_fall" "$_fake_week_file" | sort -V)"
+            _fall="$(echo "$_fall" | awk "/$_fake_week_file/{found=1} found")" # all lines after pattern incl.
+            echo "${RED_S}[WIP] (UNTESTED) YOU ENCOUNTERED RARE CASE${END}" >&2
+            echo "${MAG}IF YOU SEE THIS -> MAKE SURE THAT OUTPUT IS EXACT FOR YOUR QUERY.${END}" >&2 # FIXME
         fi
     fi
     echo "$_fall"
@@ -49,7 +58,6 @@ grep_query() {
         slice="$(echo "$slice" | grep -F -s "$search_query")"
         [ -z "$slice" ] && echo "${YEL}NO SEARCH RESULTS FOUND. EXIT${END}" && exit 2
     elif [ -n "$search_query" ]; then
-        cd "$PMDRD" || exit 1
         if [ "$grep_all" ]; then
             files="$(find_all_week_files)"
         elif [ "$grep_year" ]; then
@@ -63,6 +71,7 @@ grep_query() {
             files="$fpath"
         fi
         files_in_one_line="$(echo "$files" | tr '\n' ' ')"
+        cd "$PMDRD" || exit 1 # specifically before the cat!
         # shellcheck disable=SC2086 # (Double quote to prevent globbing and word splitting)
         MEGACAT="$(cat $files_in_one_line)" # all files split by space
         slice="$(echo "$MEGACAT" | grep -F -s "$search_query")"
