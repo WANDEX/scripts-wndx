@@ -15,6 +15,23 @@ OPTIONS
     -u, --url       URL to download
 ")
 
+at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
+
+notify() {
+    # use dunstify if available & show notification
+    case "$1" in
+        *error*|*ERROR*) urg="critical" ;;
+        *completed*|*COMPLETED*) urg="normal" ;;
+        *) urg="low" ;;
+    esac
+    if at_path dunstify; then
+        DSTT="string:x-dunst-stack-tag:[download_audio.sh]($filename)"
+        dunstify -u "$urg" -h "$DSTT" "D[AUDIO] $1" "\n$2\n"
+    else
+        notify-send -u "$urg" "D[AUDIO] $1" "\n$2\n"
+    fi
+}
+
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=e:hp:ru:
@@ -142,7 +159,9 @@ esac >/dev/null
 BEST='bestaudio[asr=48000]'
 FALLBACK='bestaudio/best'
 FORMAT="$BEST"'/'"$FALLBACK"
-notify-send -t 3000 "Downloading [AUDIO]... path:" "$OUT"
+
+notify "STARTED path:" "$OUT"
+
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
     --format "$FORMAT" --output "$OUT" "${restr[@]}" \
     --extract-audio --audio-format "mp3" "${OPT[@]}" "$URL" && \
