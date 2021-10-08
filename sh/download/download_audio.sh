@@ -13,6 +13,9 @@ OPTIONS
     -p, --path      Destination path where to download
     -r, --restrict  Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url       URL to download
+    -y, --ytdl      Any other youtube-dl native options (specify only inside \"\")
+EXAMPLES:
+    $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
@@ -47,13 +50,14 @@ notify() {
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=e:hp:ru:
-    LONG=end:,help,path:,restrict,url:
+    SHORT=e:hp:ru:y:
+    LONG=end:,help,path:,restrict,url:,ytdl:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     URL="$(xclip -selection clipboard -out)"
     END=-1
     restr=()
+    YTDLOPTS=()
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
@@ -86,6 +90,14 @@ get_opt() {
         -u|--url)
             shift
             URL="$1"
+            ;;
+        -y|--ytdl)
+            shift
+            # convert spaces in argument into individual args if any
+            # -> so here we split arg string "$1" to array and arguments
+            IFS=' ' read -ra yargs <<< "$1"
+            # + to join all previously specified -y options into one array as in EXAMPLES
+            YTDLOPTS+=( "${yargs[@]}" )
             ;;
         --)
             shift
@@ -175,9 +187,10 @@ FORMAT="${BEST}/${FALLBACK}"
 
 cmd=(\
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
---format "$FORMAT" --output "$OUT" "${restr[@]}" \
---extract-audio --audio-format "mp3" "${OPT[@]}" \
+--format "$FORMAT" --output "$OUT" \
+--extract-audio --audio-format "mp3" \
 --add-metadata --no-overwrites --no-post-overwrites \
+"${restr[@]}" "${OPT[@]}" "${YTDLOPTS[@]}" \
 )
 
 # try to get url info as json & check exit code
