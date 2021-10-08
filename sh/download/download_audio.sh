@@ -169,7 +169,7 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 --add-metadata --no-overwrites --no-post-overwrites \
 )
 
-if "${cmd[@]}" "$URL"; then # execute cmd & check exit code
+if "${cmd[@]}" "$URL"; then # try to download & check exit code
     notify "COMPLETED" "$PD"
 else
     notify "ERROR" "Something gone wrong!\n$URL"
