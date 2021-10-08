@@ -166,6 +166,7 @@ cmd=(\
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 --format "$FORMAT" --output "$OUT" "${restr[@]}" \
 --extract-audio --audio-format "mp3" "${OPT[@]}" \
+--add-metadata --no-overwrites --no-post-overwrites \
 )
 
 if "${cmd[@]}" "$URL"; then # execute cmd & check exit code
