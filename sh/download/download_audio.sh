@@ -21,11 +21,12 @@ notify() {
     # use dunstify if available & show notification
     case "$1" in
         *error*|*ERROR*) urg="critical" ;;
+        *warning*|*WARNING*) urg="normal" ;;
         *completed*|*COMPLETED*) urg="normal" ;;
         *) urg="low" ;;
     esac
     if at_path dunstify; then
-        DSTT="string:x-dunst-stack-tag:[download_audio.sh]($filename)"
+        DSTT="string:x-dunst-stack-tag:[download_audio.sh]($first_file)"
         dunstify -u "$urg" -h "$DSTT" "D[AUDIO] $1" "\n$2\n"
     else
         notify-send -u "$urg" "D[AUDIO] $1" "\n$2\n"
@@ -160,8 +161,6 @@ BEST="bestaudio[asr=48000]"
 FALLBACK="bestaudio/best"
 FORMAT="${BEST}/${FALLBACK}"
 
-notify "STARTED path:" "$OUT"
-
 cmd=(\
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 --format "$FORMAT" --output "$OUT" "${restr[@]}" \
@@ -169,10 +168,28 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 --add-metadata --no-overwrites --no-post-overwrites \
 )
 
-if "${cmd[@]}" "$URL"; then # try to download & check exit code
+# try to get url info as json & check exit code
+if json="$("${cmd[@]}" --dump-json "$URL")"; then
+    # get list of all files from url and replace any .extension on .mp3
+    # (because we convert everything to mp3 after downloading)
+    list_files="$(echo "$json" | jq -er '._filename' | sed "s/\.[^.]*$/\.mp3/g")"
+    first_file="$(echo "$list_files" | head -n1)"
+    if [ -z "$first_file" ]; then
+        notify "ERROR" "[EXIT] No _filename in json data.\n$URL"
+        exit 3
+    fi
+else
+    notify "ERROR" "[EXIT] Cannot get url info.\n$URL"
+    exit 2
+fi
+
+notify "STARTED path:" "$OUT"
+
+# try to download & check exit code
+if "${cmd[@]}" "$URL"; then
     notify "COMPLETED" "$PD"
 else
-    notify "ERROR" "Something gone wrong!\n$URL"
+    notify "ERROR" "[EXIT] CANNOT DOWNLOAD!\n$URL"
     exit 1
 fi
 
