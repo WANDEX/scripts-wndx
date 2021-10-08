@@ -156,9 +156,9 @@ case "$path" in
     ;;
 esac >/dev/null
 
-BEST='bestaudio[asr=48000]'
-FALLBACK='bestaudio/best'
-FORMAT="$BEST"'/'"$FALLBACK"
+BEST="bestaudio[asr=48000]"
+FALLBACK="bestaudio/best"
+FORMAT="${BEST}/${FALLBACK}"
 
 notify "STARTED path:" "$OUT"
 
