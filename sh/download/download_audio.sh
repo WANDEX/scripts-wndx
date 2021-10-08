@@ -190,6 +190,7 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 --format "$FORMAT" --output "$OUT" \
 --extract-audio --audio-format "mp3" \
 --add-metadata --no-overwrites --no-post-overwrites \
+--youtube-skip-dash-manifest \
 "${restr[@]}" "${OPT[@]}" "${YTDLOPTS[@]}" \
 )
 
