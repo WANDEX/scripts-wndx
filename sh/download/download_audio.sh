@@ -162,10 +162,18 @@ FORMAT="$BEST"'/'"$FALLBACK"
 
 notify "STARTED path:" "$OUT"
 
+cmd=(\
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
-    --format "$FORMAT" --output "$OUT" "${restr[@]}" \
-    --extract-audio --audio-format "mp3" "${OPT[@]}" "$URL" && \
-    notify-send -u normal -t 8000 "COMPLETED" "[AUDIO] Downloading and Converting." || \
-    notify-send -u critical -t 5000 "ERROR" "[AUDIO] Something gone wrong!"
+--format "$FORMAT" --output "$OUT" "${restr[@]}" \
+--extract-audio --audio-format "mp3" "${OPT[@]}" \
+)
+
+if "${cmd[@]}" "$URL"; then # execute cmd & check exit code
+    notify "COMPLETED" "$PD"
+else
+    notify "ERROR" "Something gone wrong!\n$URL"
+    exit 1
+fi
+
 
 
