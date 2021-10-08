@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # download via youtube-dl video playlist or single video
 
 # SOURCE GLOBALLY DEFINED TERMINAL COLOR VARIABLES
