@@ -17,6 +17,18 @@ OPTIONS
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 
+find_filepath() {
+    # find & return full path of the file by $1 filename
+    [ -z "$1" ] && echo "${RED}no filename provided, exit.${END}" && exit 4
+    if at_path fd; then
+        # use fd to find file (instead of slow 'find')
+        _filepath="$(fd --search-path "$MUSIC" -F1t f "$1")"
+    else
+        _filepath="$(find "$MUSIC" -type f -name "$1" | head -n1)"
+    fi
+    realpath -q "$_filepath"
+}
+
 notify() {
     # use dunstify if available & show notification
     case "$1" in
@@ -193,5 +205,20 @@ else
     exit 1
 fi
 
+if [ -f "$first_file" ]; then
+    filepath="$(realpath -q "$first_file")"
+else
+    # TODO: UNTESTED -> MAYBE NOT CORRECT!
+    filepath="$(find_filepath "$first_file")"
+    notify "WARNING: FIND FILE PATH FUNC IS USED!" "first file:$first_file" # XXX
+fi
+
+if [ -n "$filepath" ]; then
+    # remove from tags: all-comments, user-text-frames:(comment, description)
+    if at_path eyeD3; then
+        eyeD3 --preserve-file-times --remove-all-comments \
+            --user-text-frame "comment:" --user-text-frame "description:" "$filepath"
+    fi
+fi
 
 
