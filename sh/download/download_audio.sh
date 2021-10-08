@@ -230,8 +230,8 @@ fi
 if [ -n "$filepath" ]; then
     # remove from tags: all-comments, user-text-frames:(comment, description)
     if at_path eyeD3; then
-        eyeD3 --preserve-file-times --remove-all-comments \
-            --user-text-frame "comment:" --user-text-frame "description:" "$filepath"
+        eyeD3 --quiet --preserve-file-times --remove-all-comments \
+            --user-text-frame "comment:" --user-text-frame "description:" "$filepath" >/dev/null 2>&1 # suppress output & errors
     fi
 fi
 
