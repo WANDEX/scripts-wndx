@@ -68,12 +68,14 @@ jcheckall() {
 compose_output() {
     # get available parts of output path
     o_top=$(jcheckall 'uploader/' 'playlist_uploader/' 'channel/' 'creator/')
-    o_mid=$(jcheckall 'artist/' 'series/' 'playlist_title/')
-    o_xtr=$(jcheckall 'album/' 'season_number/' 'season/' 'chapter/')
+    o_mid=$(jcheckall 'artist/' 'series/')
+    o_wtr=$(jcheckall 'season_number/' 'season/' 'chapter/')
+    o_xtr=$(jcheckall 'album/' 'playlist_title/' 'playlist/')
     o_num=$(jcheckall 'track_number' 'episode_number' 'playlist_index')
     o_bot=$(jcheckall 'track' 'episode' 'title')
+    o_ext=$(jcheckall 'ext')
     # here we compose our output with optional path parts
-    OUT="$o_top""$o_mid""$o_xtr""$o_num""$o_bot"'.%(ext)s'
+    OUT="${o_top}${o_mid}${o_wtr}${o_xtr}${o_num}${o_bot}.${o_ext}"
     echo "$OUT"
 }
 
