@@ -9,6 +9,7 @@ USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
     -h, --help          Display help
+    -r, --real          Get output not as a ytdl template, but with real values
 EXAMPLES
 # from stdin pipe
     youtube-dl --dump-json --no-warnings --playlist-end=1 \"\$URL\" | $(basename "$0")
@@ -17,13 +18,16 @@ EXAMPLES
 ")
 
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && echo "$USAGE" && exit 0
+[ "$1" = "-r" ] || [ "$1" = "--real" ] && real=1
 
-if [ $# -gt 1 ]; then
+if [ $# -gt 2 ]; then
     printf "%s\n" "ERROR: too much arguments provided [$#]"
     printf "%s\n" 'DO NOT FORGET to put variable inside " " double quotation marks'
     printf "%s\n\n%s\n" "to provide as single JSON data variable! exit." "$USAGE"
     exit 1
-elif test -n "$1"; then
+elif [ -n "$2" ] && [ "$2" != "-r" ] && [ "$2" != "--real" ]; then
+    JSON="$2" # argument
+elif [ -n "$1" ] && [ "$1" != "-r" ] && [ "$1" != "--real" ]; then
     JSON="$1" # argument
 elif test ! -t 0; then
     JSON=$(cat) # /dev/stdin pipe used usually
@@ -32,37 +36,53 @@ else
     exit 1
 fi
 
-template_dir() { echo "%($1)s/"; }
-template_str() { echo "%($1)s"; }
-template_num() { echo "%($1)003d. "; }
+template_dir() {
+    if [ -n "$real" ]; then
+        printf "%s/" "$part"
+    else
+        printf "%s" "%($trarg)s/"
+    fi
+}
+
+template_str() {
+    if [ -n "$real" ]; then
+        printf "%s" "$part"
+    else
+        printf "%s" "%($trarg)s"
+    fi
+}
+
+template_num() {
+    _npost=". "
+    if [ -n "$real" ]; then
+        printf "%03d%s" "$part" "$_npost"
+    else
+        printf "%s%s" "%($trarg)03d" "$_npost"
+    fi
+}
 
 make_template() {
-    # make & echo youtube-dl OUTPUT TEMPLATE based on $1
-    arg=$(echo "$1" | sed "s/[/]//") # trim slash if exist
+    # decide which template to use based on $1
     case "$1" in
-        *number*|*playlist_index*) template_num "$arg" ;;
-        */*) template_dir "$arg" ;;
-        *)   template_str "$arg" ;;
+        *number*|*playlist_index*) template_num ;;
+        */*) template_dir ;;
+        *)   template_str ;;
     esac
 }
 
-# check if exist & return exit code, do not print stdout/stderr
-jcheck() { echo "$JSON" | jq -re ".$1" > /dev/null 2>&1; }
+jget() { echo "$JSON" | jq -re "${select}.$1" 2>&1;}
 
 jcheckall() {
-    # check multiple args
+    # check multiple args, return first found
     args="${*}"
     for arg in $args; do
         trarg=$(echo "$arg" | sed "s/[/]//") # trim slash to check without it
-        if jcheck "$trarg"; then
+        part="$(jget "$trarg")"
+        if [ "$part" != null ]; then
+            make_template "$arg"
             break # prefer found first -> break out of the loop
-        fi
+        fi # else -> don't make template (skip part of output path)
     done
-    # found -> for the case when we went through all the arguments and found nothing
-    # else  -> don't make template (skip part of output path)
-    if jcheck "$trarg"; then
-        make_template "$arg" # function decides which template to use
-    fi
 }
 
 compose_output() {
@@ -74,9 +94,18 @@ compose_output() {
     o_num=$(jcheckall 'track_number' 'episode_number' 'playlist_index')
     o_bot=$(jcheckall 'track' 'episode' 'title')
     o_ext=$(jcheckall 'ext')
+    [ -n "$o_ext" ] && o_ext=".$o_ext"
     # here we compose our output with optional path parts
-    OUT="${o_top}${o_mid}${o_wtr}${o_xtr}${o_num}${o_bot}.${o_ext}"
+    OUT="${o_top}${o_mid}${o_wtr}${o_xtr}${o_num}${o_bot}${o_ext}"
+    unset -v o_top o_mid o_wtr o_xtr o_num o_bot o_ext
     echo "$OUT"
 }
 
-compose_output
+playlist_indexes="$(echo "$JSON" | jq -re ".playlist_index")"
+for index in $playlist_indexes; do
+    select="select(.playlist_index==${index}) | "
+    playlist_entry="$(compose_output)"
+    output="$(printf "%s\n%s\n" "$output" "$playlist_entry")"
+done
+# remove empty lines (first line always empty)
+echo "$output" | sed '/^[[:space:]]*$/d'
