@@ -114,32 +114,26 @@ get_opt "$@"
 case "$URL" in
     *"bandcamp"*)
         PD="$MUSIC/bandcamp/"
-        OUT="$PD"'%(artist)s/%(playlist)s/%(playlist_index)02d. %(title)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"soundcloud"*"/sets/"*|*"soundcloud"*"/albums"*)
         PD="$MUSIC/soundcloud/"
-        OUT="$PD"'%(uploader)s/%(playlist)s/%(playlist_index)02d. %(fulltitle)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"soundcloud"*)
         PD="$MUSIC/soundcloud/"
-        OUT="$PD"'%(uploader)s/%(playlist)s/%(fulltitle)s.%(ext)s'
         OPT=( --embed-thumbnail )
     ;;
     *"youtu"*"playlist"*)
         PD="$MUSIC/youtube/"
-        OUT="$PD"'%(playlist_title)s/%(playlist_index)02d. %(title)s.%(ext)s'
         OPT=()
     ;;
     *"youtu"*)
         PD="$MUSIC/youtube/"
-        OUT="$PD"'%(title)s.%(ext)s'
         OPT=()
     ;;
     *)
         PD="$MUSIC/other/"
-        OUT="$PD"'%(title)s.%(ext)s'
         OPT=()
     ;;
 esac >/dev/null
@@ -148,34 +142,28 @@ esac >/dev/null
 case "$path" in
     "kdi"|"Kdi"|"KDI")
         PD="$PODCAST/KDI/"
-        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "koda"|"Koda")
         PD="$PODCAST/Koda-Koda/"
-        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "lt"|"launch")
         PD="$PODCAST/Launch Tomorrow Podcast/"
-        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "podcast"|"Podcast")
         PD="$PODCAST/"
-        OUT="$PD"'%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     "ytm"|"Ytm"|"YTM")
         PD="$YTM/RNDM/"
-        OUT="$PD"'%(uploader)s/%(title)s.%(ext)s'
         OPT=( --no-playlist )
     ;;
     *)
         if [ -n "$path" ]; then
             # add/replace 0 or more occurrences of '/' at the end, with one /
             PD="$(echo "$path" | sed "s/[/]*$/\//")"
-            OUT="$PD"'%(title)s.%(ext)s'
             OPT=( --no-playlist )
         fi
     ;;
@@ -187,7 +175,7 @@ FORMAT="${BEST}/${FALLBACK}"
 
 cmd=(\
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
---format "$FORMAT" --output "$OUT" \
+--format "$FORMAT" \
 --extract-audio --audio-format "mp3" \
 --add-metadata --no-overwrites --no-post-overwrites \
 --youtube-skip-dash-manifest \
@@ -209,29 +197,26 @@ else
     exit 2
 fi
 
-notify "STARTED path:" "$OUT"
+OUTRAW="$(echo "$json" | ytdl_out_path.sh)"
+OUTREL="$(echo "$json" | ytdl_out_path.sh --real | sed "s/\.[^.]*$/\.mp3/g")"
+OUTPATH="${PD}${OUTRAW}"
+OUTREAL="${PD}${OUTREL}"
+notify "STARTED - relative path:" "$OUTREL"
 
 # try to download & check exit code
-if "${cmd[@]}" "$URL"; then
+if "${cmd[@]}" --output "$OUTPATH" "$URL"; then
     notify "COMPLETED" "$PD"
 else
     notify "ERROR" "[EXIT] CANNOT DOWNLOAD!\n$URL"
     exit 1
 fi
 
-if [ -f "$first_file" ]; then
-    filepath="$(realpath -q "$first_file")"
-else
-    # TODO: UNTESTED -> MAYBE NOT CORRECT!
-    filepath="$(find_filepath "$first_file")"
-    notify "WARNING: FIND FILE PATH FUNC IS USED!" "first file:$first_file" # XXX
-fi
 
-if [ -n "$filepath" ]; then
+if [ -f "$OUTREAL" ]; then
     # remove from tags: all-comments, user-text-frames:(comment, description)
     if at_path eyeD3; then
         eyeD3 --quiet --preserve-file-times --remove-all-comments \
-            --user-text-frame "comment:" --user-text-frame "description:" "$filepath" >/dev/null 2>&1 # suppress output & errors
+            --user-text-frame "comment:" --user-text-frame "description:" "$OUTREAL" >/dev/null # suppress output
     fi
 fi
 
