@@ -5,6 +5,8 @@ MUSIC="$HOME/Music/1337"
 PODCAST="$MUSIC/podcasts"
 YTM="$MUSIC/YTM"
 
+ext="mp3"
+
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
@@ -17,6 +19,8 @@ OPTIONS
 EXAMPLES:
     $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
+
+sed_ext() { sed "s/\.[^.]*$/\.$ext/g" ;}
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 
@@ -176,7 +180,7 @@ FORMAT="${BEST}/${FALLBACK}"
 cmd=(\
 youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 --format "$FORMAT" \
---extract-audio --audio-format "mp3" \
+--extract-audio --audio-format "$ext" \
 --add-metadata --no-overwrites --no-post-overwrites \
 --youtube-skip-dash-manifest \
 "${restr[@]}" "${OPT[@]}" "${YTDLOPTS[@]}" \
@@ -184,9 +188,9 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
 
 # try to get url info as json & check exit code
 if json="$("${cmd[@]}" --dump-json "$URL")"; then
-    # get list of all files from url and replace any .extension on .mp3
-    # (because we convert everything to mp3 after downloading)
-    list_files="$(echo "$json" | jq -er '._filename' | sed "s/\.[^.]*$/\.mp3/g")"
+    # get list of all files from url and replace any .ext
+    # (because we convert everything to that .ext after downloading)
+    list_files="$(echo "$json" | jq -er '._filename' | sed_ext)"
     first_file="$(echo "$list_files" | head -n1)"
     if [ -z "$first_file" ]; then
         notify "ERROR" "[EXIT] No _filename in json data.\n$URL"
