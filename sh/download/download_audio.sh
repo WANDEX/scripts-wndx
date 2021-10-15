@@ -173,7 +173,16 @@ case "$path" in
     ;;
 esac >/dev/null
 
-BEST="bestaudio[asr=48000]"
+bst="bestaudio"
+asr="[asr=?48000]"
+hz="${bst}${asr}"
+abr1="[abr>=320]"
+abr2="[abr>=256]"
+abr3="[abr<=?320]"
+f1="${hz}${abr1}"
+f2="${hz}${abr2}"
+f3="${hz}${abr3}"
+BEST="$f1/$f2/$f3/$hz"
 FALLBACK="bestaudio/best"
 FORMAT="${BEST}/${FALLBACK}"
 
