@@ -45,7 +45,7 @@ notify() {
         *) urg="low" ;;
     esac
     if at_path dunstify; then
-        DSTT="string:x-dunst-stack-tag:[download_audio.sh]($first_file)"
+        DSTT="string:x-dunst-stack-tag:[download_audio.sh]($URL)"
         dunstify -u "$urg" -h "$DSTT" "D[AUDIO] $1" "\n$2\n"
     else
         notify-send -u "$urg" "D[AUDIO] $1" "\n$2\n"
