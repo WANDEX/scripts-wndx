@@ -36,13 +36,26 @@ find_filepath() {
     realpath -q "$_filepath"
 }
 
+# shellcheck disable=SC2059 # Don't use variables in the printf format string.
 notify() {
     # use dunstify if available & show notification
     case "$1" in
-        *error*|*ERROR*) urg="critical" ;;
-        *warning*|*WARNING*) urg="normal" ;;
-        *completed*|*COMPLETED*) urg="normal" ;;
-        *) urg="low" ;;
+        *error*|*ERROR*)
+            urg="critical"
+            CLR="$RED_S"
+        ;;
+        *warning*|*WARNING*)
+            urg="normal"
+            CLR="$YEL_S"
+        ;;
+        *completed*|*COMPLETED*)
+            urg="normal"
+            CLR="$GRN_S"
+        ;;
+        *)
+            urg="low"
+            CLR="$DEF_S"
+        ;;
     esac
     if at_path dunstify; then
         DSTT="string:x-dunst-stack-tag:[download_audio.sh]($URL)"
@@ -50,6 +63,8 @@ notify() {
     else
         notify-send -u "$urg" "D[AUDIO] $1" "\n$2\n"
     fi
+    [ -n "$1" ] && printf "${CLR}${1}${END}\n"
+    [ -n "$2" ] && printf "${CLR}${2}${END}\n"
 }
 
 get_opt() {
@@ -59,7 +74,7 @@ get_opt() {
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     URL="$(xclip -selection clipboard -out)"
-    END=-1
+    PEND=-1
     restr=()
     YTDLOPTS=()
     eval set -- "$OPTIONS"
@@ -68,7 +83,7 @@ get_opt() {
         -e|--end)
             shift
             case $1 in
-                -1) END=-1 ;; # get full playlist
+                -1) PEND=-1 ;; # get full playlist
                 0*)
                     printf "(%s)\n^ unsupported number! exit.\n" "$1"
                     exit 1
@@ -77,7 +92,7 @@ get_opt() {
                     printf "(%s)\n^ IS NOT A NUMBER OF INT! exit.\n" "$1"
                     exit 1
                     ;;
-                *) END=$1 ;;
+                *) PEND=$1 ;;
             esac
             ;;
         -h|--help)
@@ -187,7 +202,7 @@ FALLBACK="bestaudio/best"
 FORMAT="${BEST}/${FALLBACK}"
 
 cmd=(\
-youtube-dl --ignore-errors --yes-playlist --playlist-end="$END" \
+youtube-dl --ignore-errors --yes-playlist --playlist-end="$PEND" \
 --format "$FORMAT" \
 --extract-audio --audio-format "$ext" \
 --add-metadata --no-overwrites --no-post-overwrites \
