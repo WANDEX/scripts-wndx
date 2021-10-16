@@ -92,7 +92,7 @@ compose_output() {
     o_wtr=$(jcheckall 'season_number/' 'season/' 'chapter/')
     o_xtr=$(jcheckall 'album/' 'playlist_title/' 'playlist/')
     o_num=$(jcheckall 'track_number' 'episode_number' 'playlist_index')
-    o_bot=$(jcheckall 'track' 'episode' 'title')
+    o_bot=$(jcheckall 'track' 'episode' 'title' 'fulltitle')
     o_ext=$(jcheckall 'ext')
     [ -n "$o_ext" ] && o_ext=".$o_ext"
     # here we compose our output with optional path parts
