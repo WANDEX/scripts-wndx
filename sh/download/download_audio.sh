@@ -5,6 +5,10 @@ MUSIC="$HOME/Music/1337"
 PODCAST="$MUSIC/podcasts"
 YTM="$MUSIC/YTM"
 
+OLDIFS="$IFS"
+# set variable to a new line, to use later as a value in Internal Field Separator
+NLIFS='
+'
 ext="mp3"
 
 USAGE=$(printf "%s" "\
@@ -20,9 +24,24 @@ EXAMPLES:
     $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
 
-sed_ext() { sed "s/\.[^.]*$/\.$ext/g" ;}
+sed_ext() { sed "s/\.[^.]*$/$1/g" ;}
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
+
+clear_tags() {
+    # remove from tags: all-comments, user-text-frames:(comment, description)
+    at_path eyeD3 || return
+    if [ ! -f "$1" ]; then
+        # shellcheck disable=SC2153 # Possible misspelling
+        printf '%s: "%s"\n' "${RED}FNF${END}" "$1"
+        return
+    fi
+    # suppress output
+    eyeD3 --quiet --preserve-file-times --remove-all-comments \
+        --user-text-frame "comment:" \
+        --user-text-frame "description:" \
+        "$1" >/dev/null || echo "not cleared: '$1'"
+}
 
 find_filepath() {
     # find & return full path of the file by $1 filename
@@ -214,7 +233,7 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$PEND" \
 if json="$("${cmd[@]}" --dump-json "$URL")"; then
     # get list of all files from url and replace any .ext
     # (because we convert everything to that .ext after downloading)
-    list_files="$(echo "$json" | jq -er '._filename' | sed_ext)"
+    list_files="$(echo "$json" | jq -er '._filename' | sed_ext ".$ext")"
     first_file="$(echo "$list_files" | head -n1)"
     if [ -z "$first_file" ]; then
         notify "ERROR" "[EXIT] No _filename in json data.\n$URL"
@@ -226,26 +245,27 @@ else
 fi
 
 OUTRAW="$(echo "$json" | ytdl_out_path.sh)"
-OUTREL="$(echo "$json" | ytdl_out_path.sh --real | sed "s/\.[^.]*$/\.mp3/g")"
-OUTPATH="${PD}${OUTRAW}"
-OUTREAL="${PD}${OUTREL}"
-notify "STARTED - relative path:" "$OUTREL"
+OUTREL="$(echo "$json" | ytdl_out_path.sh --real | sed_ext ".$ext")"
+reldir="$(echo "$OUTREL" | head -n1 | sed "s|[^/]*$||")" # first file relative path to dir
+notify "STARTED - relative path:" "$reldir"
 
-# try to download & check exit code
-if "${cmd[@]}" --output "$OUTPATH" "$URL"; then
-    notify "COMPLETED" "$PD"
-else
-    notify "ERROR" "[EXIT] CANNOT DOWNLOAD!\n$URL"
-    exit 1
-fi
-
-
-if [ -f "$OUTREAL" ]; then
-    # remove from tags: all-comments, user-text-frames:(comment, description)
-    if at_path eyeD3; then
-        eyeD3 --quiet --preserve-file-times --remove-all-comments \
-            --user-text-frame "comment:" --user-text-frame "description:" "$OUTREAL" >/dev/null # suppress output
+total="$(echo "$OUTREL" | wc -l | sed "s/[ ]\+//g")" # remove whitespace
+IFS="$NLIFS"
+i=0
+for out_template in $OUTRAW; do
+    i=$(( i + 1))
+    # from line i - get basename without ext
+    _notify_name="$(echo "$OUTREL" | awk "NR==$i" | sed "s/^.*[/]//" | sed_ext '')"
+    _notify_path="$(echo "$OUTREL" | awk "NR==$i" | sed "s|$HOME|~|; s|[^/]*$||")"
+    if "${cmd[@]}" --playlist-items "$i" --output "${PD}${out_template}" "$URL"; then
+        notify "[$i/$total] COMPLETED $_notify_path" "$_notify_name"
+    else
+        notify "ERROR: NOT DOWNLOADED $_notify_path" "$_notify_name\n$URL"
     fi
-fi
+done
+for file_path in $OUTREL; do
+    clear_tags "${PD}${file_path}"
+done
+IFS="$OLDIFS" # restore
 
 
