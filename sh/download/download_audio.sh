@@ -24,6 +24,8 @@ EXAMPLES:
     $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
 
+lines_total() { wc -l | sed "s/[ ]\+//g" ;} # return total number of lines (trimming whitespaces)
+
 sed_ext() { sed "s/\.[^.]*$/$1/g" ;}
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
@@ -247,7 +249,7 @@ OUTREL="$(echo "$json" | ytdl_out_path.sh --real | sed_ext ".$ext")"
 reldir="$(echo "$OUTREL" | head -n1 | sed "s|[^/]*$||")" # first file relative path to dir
 notify "STARTED - relative path:" "$reldir"
 
-total="$(echo "$OUTREL" | wc -l | sed "s/[ ]\+//g")" # remove whitespace
+total="$(echo "$OUTREL" | lines_total)"
 IFS="$NLIFS"
 i=0
 for out_template in $OUTRAW; do
