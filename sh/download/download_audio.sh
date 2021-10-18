@@ -38,11 +38,23 @@ clear_tags() {
         printf '%s: "%s"\n' "${RED}FNF${END}" "$1"
         return
     fi
-    # suppress output
+    # remove various garbage from tags
     eyeD3 --quiet --preserve-file-times --remove-all-comments \
         --user-text-frame "comment:" \
         --user-text-frame "description:" \
         "$1" >/dev/null || echo "not cleared: '$1'"
+
+    # remove extra image if more than one embedded
+    _desc_match="Description: "
+    tag_img_desc="$(eyeD3 "$1" | grep -A1 -F "image" | grep -F "$_desc_match" | sed "s/$_desc_match//g")"
+    tag_img_count="$(echo "$tag_img_desc" | lines_total)"
+    if [ "$tag_img_count" -gt 1 ]; then
+        # exclude first img description, as we do not want to remove first embedded img
+        _tag_img_desc="$(echo "$tag_img_desc" | sed 1d)"
+        for img_desc in $_tag_img_desc; do
+            eyeD3 --quiet --preserve-file-times --remove-image "$img_desc" "$1" >/dev/null
+        done
+    fi
 }
 
 find_filepath() {
