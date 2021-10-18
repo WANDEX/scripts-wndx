@@ -165,7 +165,7 @@ ytdl_check() {
         notify-send -u critical "$summary" "$msg"
         exit $return_code
     else
-        RAWOUT=$(echo "$JSON" | ytdl_out_path.sh)
+        RAWOUT="$(echo "$JSON" | ytdl_out_path.sh | head -n1)" # use a template based on first file if many
         OUTPATH="$OUT""$RAWOUT"
     fi
 }
