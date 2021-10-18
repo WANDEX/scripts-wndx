@@ -24,6 +24,15 @@ EXAMPLES:
     $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
 
+isfile() {
+    # if file not found -> print error message and return 1
+    if [ ! -f "$1" ]; then
+        # shellcheck disable=SC2153 # Possible misspelling
+        printf '%s: "%s"\n' "${RED}FNF${END}" "$1"
+        return 1
+    fi
+}
+
 lines_total() { wc -l | sed "s/[ ]\+//g" ;} # return total number of lines (trimming whitespaces)
 
 sed_ext() { sed "s/\.[^.]*$/$1/g" ;}
@@ -33,11 +42,7 @@ at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 clear_tags() {
     # remove from tags: all-comments, user-text-frames:(comment, description)
     at_path eyeD3 || return
-    if [ ! -f "$1" ]; then
-        # shellcheck disable=SC2153 # Possible misspelling
-        printf '%s: "%s"\n' "${RED}FNF${END}" "$1"
-        return
-    fi
+    isfile "$1" || return
     # remove various garbage from tags
     eyeD3 --quiet --preserve-file-times --remove-all-comments \
         --user-text-frame "comment:" \
