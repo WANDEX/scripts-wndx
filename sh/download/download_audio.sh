@@ -307,6 +307,15 @@ for out_template in $OUTRAW; do
 done
 for file_path in $OUTREL; do
     clear_tags "${PD}${file_path}"
+done
+if at_path beet; then
+    # beet check uniq dirs -> to assume as albums (not one by one as individual files)
+    uniq_subdirs="$(echo "$OUTREL" | sed "s|[^/]*$||g" | sort -u)"
+    for uniq_dir in $uniq_subdirs; do
+        beet import -Cqp "${PD}${uniq_dir}"
+    done
+fi
+for file_path in $OUTREL; do
     check_tags "${PD}${file_path}"
 done
 IFS="$OLDIFS" # restore
