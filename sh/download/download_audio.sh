@@ -62,6 +62,31 @@ clear_tags() {
     fi
 }
 
+get_tag() { eyeD3 --plugin=display --no-newline --pattern="%$1%" "$2" ;}
+
+check_tags() {
+    # check that file has all required tags:
+    # artist, album, title, track number, recording date
+    at_path eyeD3 || return
+    isfile "$1" || return
+    t_artist="$(get_tag 'artist' "$1")"
+    t_album="$(get_tag 'album' "$1")"
+    t_title="$(get_tag 'title' "$1")"
+    t_track="$(get_tag 'track' "$1")"
+    t_rdate="$(get_tag 'recording-date' "$1")"
+    if [ -z "$t_artist" ] || [ -z "$t_album" ] || \
+        [ -z "$t_title" ] || [ -z "$t_track" ] || [ -z "$t_rdate" ]
+    then
+        printf "\n\"%s\"\n" "$1"
+        printf "%s\n" "${YEL}^ file has empty required tags:${END}"
+        [ -z "$t_artist" ] && printf "${BLD}%s${END}\n" "artist"
+        [ -z "$t_album" ] && printf "${BLD}%s${END}\n" "album"
+        [ -z "$t_title" ] && printf "${BLD}%s${END}\n" "title"
+        [ -z "$t_track" ] && printf "${BLD}%s${END}\n" "track number"
+        [ -z "$t_rdate" ] && printf "${BLD}%s${END}\n" "recording-date"
+    fi
+}
+
 find_filepath() {
     # find & return full path of the file by $1 filename
     [ -z "$1" ] && echo "${RED}no filename provided, exit.${END}" && exit 4
@@ -282,6 +307,7 @@ for out_template in $OUTRAW; do
 done
 for file_path in $OUTREL; do
     clear_tags "${PD}${file_path}"
+    check_tags "${PD}${file_path}"
 done
 IFS="$OLDIFS" # restore
 
