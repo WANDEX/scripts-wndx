@@ -5,6 +5,11 @@
 self="$(basename "$0")"
 f="${BLD}${ITQ}"
 
+OLDIFS="$IFS"
+# set variable to a new line, to use later as a value in Internal Field Separator
+NLIFS='
+'
+
 USAGE=$(printf "%s" "\
 Usage: 'any multiline data' | ${self} [ARGS...]
 USAGE ${BLD}EXAMPLES:${END}
@@ -39,7 +44,9 @@ else
     exit 1 # silently exit.
 fi
 
+IFS="$NLIFS"
 # do any provided arguments for each line
 for line in $pipe; do
     echo "$line" "$@"
 done
+IFS="$OLDIFS" # restore
