@@ -6,16 +6,6 @@
 # shellcheck source=$ENVSCR/termcolors
 TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
 
-# check if script started from terminal emulator
-if [ -t 0 ]; then
-    is_term=1
-    # get before everything else (to prevent switching to another window)
-    fwid=$(xdotool getactivewindow) # get id of the active/focused window
-else
-    is_term=0
-    fwid="empty"
-fi
-
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
@@ -25,6 +15,7 @@ OPTIONS
     -h, --help          Display help
     -i, --interactive   Explicit interactive playlist end mode
     -p, --path          Destination path where to download
+    -P, --progress      Toggle showing of download progress in notification (only if started from terminal)
     -q, --quality       Quality of video/stream
     -r, --restrict      Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url           URL of video/stream
@@ -35,8 +26,8 @@ EXAMPLES:
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=b:e:f:hip:rq:u:y:
-    LONG=begin:,end:,file:,help,interactive,path:,restrict,quality:,url:,ytdl:
+    SHORT=b:e:f:hip:Prq:u:y:
+    LONG=begin:,end:,file:,help,interactive,path:,progress,restrict,quality:,url:,ytdl:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     OUT="$HOME"'/Films/.yt/'
@@ -48,6 +39,7 @@ get_opt() {
     URL="$(xclip -selection clipboard -out)"
     restr=()
     YTDLOPTS=()
+    PROGRESS=0
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
@@ -103,6 +95,9 @@ get_opt() {
             shift
             OUT="$1"
             ;;
+        -P|--progress)
+            [ "$PROGRESS" -eq 1 ] && PROGRESS=0 || PROGRESS=1 # toggle behavior of value
+            ;;
         -r|--restrict)
             restr=( --restrict-filenames )
             ;;
@@ -132,6 +127,16 @@ get_opt() {
 }
 
 get_opt "$@"
+
+# check if script started from terminal emulator
+if [ -t 0 ] && [ "$PROGRESS" == "1" ] ; then
+    is_term=1
+    # get before everything else (to prevent switching to another window)
+    fwid=$(xdotool getactivewindow) # get id of the active/focused window
+else
+    is_term=0
+    fwid="empty"
+fi
 
 get_index() {
     url="$1"
