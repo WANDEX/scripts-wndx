@@ -298,7 +298,7 @@ ytdl() {
                 "[DOWNLOAD][VIDEO][FINISHED]" "\n$body\n"
         fi
     else
-        dunstify -u critical -h "string:x-dunst-stack-tag:dp_$fwid" \
+        dunstify -u critical -t 0 -h "string:x-dunst-stack-tag:dp_$fwid" \
             "[DOWNLOAD][VIDEO][ERROR]:[$exit_code]" "\n$body\n$url\n"
         if [ $is_term -eq 1 ]; then
             # here we fake ->
