@@ -9,6 +9,7 @@ TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
+    -B, --best          Toggle using of simple 'best' format
     -b, --begin         Download from playlist index (default:1)
     -e, --end           If url is playlist - how many items to download (default:1)
     -f, --file          Read url's from file, and download each specified on it's own line
@@ -16,6 +17,7 @@ OPTIONS
     -i, --interactive   Explicit interactive playlist end mode
     -p, --path          Destination path where to download
     -P, --progress      Toggle showing of download progress in notification (only if started from terminal)
+    -o, --oscr          Toggle using of out path script for composing path
     -q, --quality       Quality of video/stream
     -r, --restrict      Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url           URL of video/stream
@@ -26,8 +28,8 @@ EXAMPLES:
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=b:e:f:hip:Prq:u:y:
-    LONG=begin:,end:,file:,help,interactive,path:,progress,restrict,quality:,url:,ytdl:
+    SHORT=Bb:e:f:hip:Porq:u:y:
+    LONG=best,begin:,end:,file:,help,interactive,path:,progress,oscr,restrict,quality:,url:,ytdl:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     OUT="$HOME"'/Films/.yt/'
@@ -40,9 +42,14 @@ get_opt() {
     restr=()
     YTDLOPTS=()
     PROGRESS=0
+    BESTFORMAT=0
+    OUT_PATH_SCRIPT=1
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
+        -B|--best)
+            [ "$BESTFORMAT" -eq 1 ] && BESTFORMAT=0 || BESTFORMAT=1 # toggle behavior of value
+            ;;
         -b|--begin)
             shift
             case $1 in
@@ -97,6 +104,9 @@ get_opt() {
             ;;
         -P|--progress)
             [ "$PROGRESS" -eq 1 ] && PROGRESS=0 || PROGRESS=1 # toggle behavior of value
+            ;;
+        -o|--oscr)
+            [ "$OUT_PATH_SCRIPT" -eq 1 ] && OUT_PATH_SCRIPT=0 || OUT_PATH_SCRIPT=1 # toggle behavior of value
             ;;
         -r|--restrict)
             restr=( --restrict-filenames )
@@ -170,7 +180,9 @@ ytdl_check() {
         notify-send -u critical "$summary" "$msg"
         exit $return_code
     else
-        RAWOUT="$(echo "$JSON" | ytdl_out_path.sh | head -n1)" # use a template based on first file if many
+        if [ "$OUT_PATH_SCRIPT" -eq 1 ]; then
+            RAWOUT="$(echo "$JSON" | ytdl_out_path.sh | head -n1)" # use a template based on first file if many
+        fi
         OUTPATH="$OUT""$RAWOUT"
     fi
 }
@@ -267,7 +279,11 @@ ytdl() {
     GLUED="$VIDEO"'+'"$AUDIO"
     FALLBACKVIDEO='bestvideo[height<=?'"$QLT"']'
     FALLBACKAUDIO='bestaudio/best'
-    FORMAT="$GLUED"'/'"$FALLBACKVIDEO"'+'"$FALLBACKAUDIO"
+    if [ "$BESTFORMAT" -eq 1 ]; then
+        FORMAT="best"
+    else
+        FORMAT="$GLUED"'/'"$FALLBACKVIDEO"'+'"$FALLBACKAUDIO"
+    fi
     title="$(echo "$JSON" | jq -r ".title")"
     case "$url" in
         *"playlist?list="*) body="$url" ;;
