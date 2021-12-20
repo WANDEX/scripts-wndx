@@ -1,11 +1,6 @@
 #!/bin/bash
 # download via youtube-dl video playlist or single video
 
-# SOURCE GLOBALLY DEFINED TERMINAL COLOR VARIABLES
-# shellcheck disable=SC1091
-# shellcheck source=$ENVSCR/termcolors
-TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
-
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
 OPTIONS
@@ -197,18 +192,18 @@ statistic() {
     case "$exit_code" in
         0)
             ok=$(echo "$ok+1" | bc)
-            printf "${CYN_S}[%s/%s]${END}\n" "$ok" "$URLL"
+            printf "[%s/%s]\n" "$ok" "$URLL"
         ;;
         *)
             err=$(echo "$err+1" | bc)
-            printf "${RED_S}[%s(%s)]${END}\n" "ERROR:" "$exit_code"
+            printf "[%s(%s)]\n" "ERROR:" "$exit_code"
         ;;
     esac
     sum=$(echo "$ok+$err" | bc)
     if [ "$URLL" -eq "$ok" ]; then
-        printf "${CYN_S}[%s]${END} ${CYN}%s${END}\n" "$ok" "ALL OK, FINISHED."
+        printf "[%s] %s\n" "$ok" "ALL OK, FINISHED."
     elif [ "$URLL" -eq "$sum" ]; then
-        printf "${MAG}%s ${RED}[%s] ${MAG}%s${END}\n" "FINISHED WITH" "$err" "ERRORS."
+        printf "%s [%s] %s\n" "FINISHED WITH" "$err" "ERRORS."
     fi
 }
 
@@ -243,7 +238,7 @@ loop_over_urls() {
                 OUTPATH=$(add_index "$findex")
             ;;
         esac
-        printf "\n${CYN}> %s${END}\n" "$url"
+        printf "\n> %s\n" "$url"
         ytdl_cmd "$url"
     done <<< "$URLS"
 }
