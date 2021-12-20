@@ -89,7 +89,8 @@ get_opt() {
             fi
             # remove everything after # character and empty lines with/without spaces
             URLS=$(sed "s/[[:space:]]*#.*$//g; /^[[:space:]]*$/d" "$file")
-            URLL=$(echo "$URLS" | wc -l)
+            # return total number of lines (trimming whitespaces)
+            URLL=$(echo "$URLS" | wc -l | sed "s/[ ]\+//g" )
             ;;
         -h|--help)
             echo "$USAGE"
