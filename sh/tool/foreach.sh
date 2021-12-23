@@ -15,7 +15,9 @@ Usage: 'any multiline data' | ${self} [ARGS...]
 USAGE ${BLD}EXAMPLES:${END}
 
 ${f}# grep all files with pattern and sed -i replace pattern strings:${END}
-grep -r '\$BASH_SOURCE' -l | foreach.sh | xargs sed -i 's/\$BASH_SOURCE/\"\$0\"/'
+grep -l -r '\$BASH_SOURCE' | foreach.sh | xargs sed -i 's/\$BASH_SOURCE/\"\$0\"/'
+${f}# ^ same but with ripgrep:${END}
+rg -l
 
 ${f}# grep from each *.diff file in current dir:${END}
 find . -type f -name *.diff | foreach.sh | xargs grep -i 'Only in'
