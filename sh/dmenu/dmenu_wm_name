@@ -5,7 +5,21 @@ arg="$1"
 
 fwid=$(xdotool getactivewindow) # get id of the active/focused window
 
-if [ -z "$arg" ]; then
+silence="SILENCE"
+# toggle add/remove silence string in window title
+if [ "$arg" = "$silence" ]; then
+    wm_name=$(xprop -id "$fwid" WM_NAME | cut -d '"' -f 2)
+    case "$wm_name" in
+	*"$silence"*)
+        # remove silence from window title
+        input="$(echo "$wm_name" | sed "s/ \[${silence}\]//g")"
+        ;;
+    *)
+        # append silence to window title
+        input="${wm_name} [${silence}]"
+        ;;
+    esac
+elif [ -z "$arg" ]; then
     input=$(echo "" | dmenu -p "enter new window title:")
 else
     wm_name=$(xprop -id "$fwid" WM_NAME | cut -d '"' -f 2)
