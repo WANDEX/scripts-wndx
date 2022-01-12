@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # get average crypto exchange rate for last ~5 min
 CSCRDIR="${CSCRDIR:-"$HOME"/.cache/cscripts}"
 CACHE="$CSCRDIR"'/rate/rate'
@@ -94,16 +94,16 @@ get_opt() {
             shift
             case $1 in
                 0*)
-                    printf "$1\n^ unsupported number! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
                     exit 1
                     ;;
                 ''|*[!0-9]*)
-                    printf "$1\n^ IS NOT A NUMBER OF INT! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
                     exit 1
                     ;;
                 *) n=$1 ;;
             esac
-            [ $n -gt $n_hardcoded_max ] && n=$n_hardcoded_max
+            [[ $n -gt $n_hardcoded_max ]] && n="$n_hardcoded_max"
             ;;
         -o|--output)
             shift
@@ -135,14 +135,14 @@ get_opt() {
             shift
             case $1 in
                 0*)
-                    printf "$1\n^ unsupported number! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
                     exit 1
                     ;;
                 ''|*[!0-9]*)
-                    printf "$1\n^ IS NOT A NUMBER OF INT! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
                     exit 1
                     ;;
-                *) mplen=$1 ;;
+                *) mplen="$1" ;;
             esac
             ;;
         --coins)
@@ -200,6 +200,7 @@ get_defaults() {
     fi
 }
 
+# shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
 colored_change_emojis() {
     ch01h="$1"
     ch24h="$2"
@@ -220,59 +221,61 @@ colored_change_emojis() {
     _01h=$(echo "$ch01h" | sed "s/+//; s/-//; s/%//" | xargs printf "%.*f\n" "0")
 
     # 24
-    if [[ $(($_24h)) -ge $cW ]]; then
-        if [[ "$ch24h" == +* ]]; then
+    if [[ $_24h -ge $cW ]]; then
+        if [[ $ch24h == +* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/+/$upW/g")
-        elif [[ "$ch24h" == -* ]]; then
+        elif [[ $ch24h == -* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/-/$dwW/g")
         fi
-    elif [[ $(($_24h)) -ge $cH ]]; then
-        if [[ "$ch24h" == +* ]]; then
+    elif [[ $_24h -ge $cH ]]; then
+        if [[ $ch24h == +* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/+/$upH/g")
-        elif [[ "$ch24h" == -* ]]; then
+        elif [[ $ch24h == -* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/-/$dwH/g")
         fi
-    elif [[ $(($_24h)) -ge $cN ]]; then
-        if [[ "$ch24h" == +* ]]; then
+    elif [[ $_24h -ge $cN ]]; then
+        if [[ $ch24h == +* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/+/$upN/g")
-        elif [[ "$ch24h" == -* ]]; then
+        elif [[ $ch24h == -* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/-/$dwN/g")
         fi
     else
-        if [[ "$ch24h" == +* ]]; then
+        if [[ $ch24h == +* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/+/$upL/g")
         elif [[ "$ch24h" == -* ]]; then
             ch24h=$(echo "$ch24h" | sed "s/-/$dwL/g")
         fi
     fi
     # 01
-    if [[ $(($_01h)) -ge $cW ]]; then
-        if [[ "$ch01h" == +* ]]; then
+    if [[ $_01h -ge $cW ]]; then
+        if [[ $ch01h == +* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/+/$upW/g")
-        elif [[ "$ch01h" == -* ]]; then
+        elif [[ $ch01h == -* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/-/$dwW/g")
         fi
-    elif [[ $(($_01h)) -ge $cH ]]; then
-        if [[ "$ch01h" == +* ]]; then
+    elif [[ $_01h -ge $cH ]]; then
+        if [[ $ch01h == +* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/+/$upH/g")
-        elif [[ "$ch01h" == -* ]]; then
+        elif [[ $ch01h == -* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/-/$dwH/g")
         fi
-    elif [[ $(($_01h)) -ge $cN ]]; then
-        if [[ "$ch01h" == +* ]]; then
+    elif [[ $_01h -ge $cN ]]; then
+        if [[ $ch01h == +* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/+/$upN/g")
-        elif [[ "$ch01h" == -* ]]; then
+        elif [[ $ch01h == -* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/-/$dwN/g")
         fi
     else
-        if [[ "$ch01h" == +* ]]; then
+        if [[ $ch01h == +* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/+/$upL/g")
-        elif [[ "$ch01h" == -* ]]; then
+        elif [[ $ch01h == -* ]]; then
             ch01h=$(echo "$ch01h" | sed "s/-/$dwL/g")
         fi
     fi
 }
 
+# shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
+# shellcheck disable=SC2059 # Don't use variables in the printf format string.
 get_form_out() {
     multiline="$1"
     IFS=',' read -ra array <<< "$output"
@@ -283,7 +286,7 @@ get_form_out() {
         price=$(echo "$foundline" | awk '{print $3}')
         int_price=$(echo "$price" | sed 's/[.].*$//')
         # if length <= min_length -> apply printf format
-        if [ ${#int_price} -le $mplen ]; then
+        if [[ ${#int_price} -le $mplen ]]; then
             price=$(echo "$price" | awk '{printf "'"$printf_p"'", $1}')
         else
             price=$(echo "$price" | sed 's/[.].*$//')
@@ -329,7 +332,7 @@ get_date() {
         if [[ $difference -gt 0 ]]; then
             if [[ $difference -lt 10 ]]; then
                 [ $debug -eq 1 ] && notify-send "rate - sleep to sync:" "$difference sec"
-                sleep $difference
+                sleep "$difference"
             elif [[ $difference -lt 299 ]]; then
                 [ $debug -eq 1 ] && notify-send "rate - sync difference:" "$difference sec"
             fi
@@ -392,4 +395,3 @@ main() {
 }
 
 main "$@"
-
