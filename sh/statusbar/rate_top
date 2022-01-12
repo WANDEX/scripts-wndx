@@ -1,15 +1,38 @@
-#!/bin/sh
+#!/bin/bash
 # show rate data of top coins by $1-COLNUM, $2-ORDER/direction
 
 COLNUM=${1:-3}
 ORDER=${2:-"gain"}
 SIG=$((34+$3))
 
-
 case "$ORDER" in
-    *"-d"*|*"g"*|*"u"*) UD='🔺' && AD='-d';;
-    *"-a"*|*"l"*|*"d"*) UD='🔻' && AD='-a';;
-    *) UD='🔺' && AD='-d';;
+    *"-d"*|*"g"*|*"u"*)
+        if [ "$S2D" ]; then
+            C="$(s2d -c green)"
+            UD="^c${C}^^d^"
+        else
+            UD='🔺'
+        fi
+        AD='-d'
+    ;;
+    *"-a"*|*"l"*|*"d"*)
+        if [ "$S2D" ]; then
+            C="$(s2d -c red)"
+            UD="^c${C}^^d^"
+        else
+            UD='🔻'
+        fi
+        AD='-a'
+    ;;
+    *)
+        if [ "$S2D" ]; then
+            C="$(s2d -c green)"
+            UD="^c${C}^^d^"
+        else
+            UD='🔺'
+        fi
+        AD='-d'
+    ;;
 esac
 
 case "$COLNUM" in
@@ -24,7 +47,8 @@ esac
 
 # common options for rate_flip & rate_sort
 OPTS=("$AD" -c "$COLNUM" -n 10)
-RFOPTS=(${OPTS[@]} -l --exclude "p,m" --bar --prefix "$UD""$PREFIX:")
+# shellcheck disable=SC2206 # (Double quote to prevent globbing and word splitting)
+RFOPTS=(${OPTS[@]} -l --exclude "p,m" --bar --prefix "${UD}${PREFIX}:")
 fold="[+]rt($PREFIX)$UD"
 
 show_report() {
