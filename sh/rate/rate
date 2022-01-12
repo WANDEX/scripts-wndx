@@ -204,14 +204,27 @@ get_defaults() {
 colored_change_emojis() {
     ch01h="$1"
     ch24h="$2"
-    upW='🟩'
-    dwW='🟥'
-    upH='🟢'
-    dwH='🔴'
-    upN='▲ '
-    dwN='▼ '
-    upL='△ '
-    dwL='▽ '
+    if [ "$S2D" ]; then
+        c_g="$(s2d -c green)"
+        c_r="$(s2d -c red)"
+        u_w='▲ ' && upW="^c${c_g}^${u_w}^d^"
+        d_w='▼ ' && dwW="^c${c_r}^${d_w}^d^"
+        u_h=' ' && upH="^c${c_g}^${u_h}^d^"
+        d_h=' ' && dwH="^c${c_r}^${d_h}^d^"
+        u_n=' ' && upN="^c${c_g}^${u_n}^d^"
+        d_n=' ' && dwN="^c${c_r}^${d_n}^d^"
+        u_l=' ' && upL="^c${c_g}^${u_l}^d^"
+        d_l=' ' && dwL="^c${c_r}^${d_l}^d^"
+    else
+        upW='🟩'
+        dwW='🟥'
+        upH='🟢'
+        dwH='🔴'
+        upN='▲ '
+        dwN='▼ '
+        upL=' '
+        dwL=' '
+    fi
     cW=20
     cH=10
     cN=5
