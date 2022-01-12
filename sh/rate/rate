@@ -321,7 +321,8 @@ get_form_out() {
 get_date() {
     if [ -f "$CACHE" ]; then
         TABLE=$(cat "$CACHE")
-        tempd=$(tail -n 1 "$CACHE" | sed 's/ UTC//' | sed 's/'$(echo "[\033]\[37m[\033]\[2m")'//' | sed 's/'$(echo "[\033]\[0m")'//')
+        # clean date from possible ANSI sequences of colored cache text, +remove UTC
+        tempd=$(tail -n 1 "$CACHE" | sed 's/\x1b\[[0-9;]*m//g; s/ UTC//')
         date=$(date --date="$tempd" +%s --utc)
         dateadd=$(echo "$date+300" | bc) # add N to date
         difference=$(echo "$dateadd-($(date +%s --utc))+1" | bc)
