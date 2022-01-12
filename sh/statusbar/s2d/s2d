@@ -20,8 +20,7 @@ OPTIONS
     --battery       Dynamic battery drawing
 ")
 
-# read into variable using 'Here Document' code block
-read -r -d '' S2D_MEMO <<- EOF
+S2D_MEMO=$(printf "%s" "\
 ${BLD}S2D MEMO:${END}
 ^rx,y,w,h^  Draw a rectangle of width w and height h,
             with its top left corner at (x,y) relative the X drawing cursor.
@@ -38,7 +37,7 @@ ${BLD}S2D MEMO:${END}
             Useful when drawing multiple rectangles on top of one another.
 ^v^         Save current color scheme to restore it later with the ^t^ tag.
 ^t^         Restores the last color scheme saved by the ^v^ tag.
-EOF
+")
 
 clean_content() {
     # remove everything after // characters and empty lines with/without spaces
