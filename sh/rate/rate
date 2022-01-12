@@ -49,12 +49,13 @@ def_opt() {
     Ec=0
     color=0 # color mode 1=on
     debug=0 # debug mode 1=on
+    s2d=0
 }
 
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=c:Cd:e:kf:hHn:o:t
-    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test
+    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     eval set -- "$OPTIONS"
     while true; do
@@ -154,6 +155,9 @@ get_opt() {
         --debug)
             debug=1
             ;;
+        --s2d)
+            s2d=1
+            ;;
         --)
             shift
             break
@@ -204,7 +208,7 @@ get_defaults() {
 colored_change_emojis() {
     ch01h="$1"
     ch24h="$2"
-    if [ "$S2D" ]; then
+    if [ "$S2D" ] && [[ $s2d -eq 1 ]]; then
         c_g="$(s2d -c green)"
         c_r="$(s2d -c red)"
         u_w='▲ ' && upW="^c${c_g}^${u_w}^d^"
@@ -317,7 +321,7 @@ get_form_out() {
         ch24h=$(printf "$printf_h" "$ch24h")
         ch01h=$(printf "$printf_h" "$ch01h")
 
-        if [ $Ec -eq 1 ]; then
+        if [[ $Ec -eq 1 ]] || [[ $s2d -eq 1 ]]; then
             colored_change_emojis "$ch01h" "$ch24h"
         fi
 
