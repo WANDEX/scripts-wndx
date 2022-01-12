@@ -13,7 +13,7 @@ LIST="$CSCRDIR"'/rate/rate_stat_coin_list'"$POSTFIX"
 COIN_LIST="${CAT:-"BTC,ETH,BCH"}"
 
 price() { rate -o "$COIN_LIST" -f "%c:%p"; }
-ch24h() { rate -o "$COIN_LIST" -f "%c:%H" --Ec; }
+ch24h() { rate -o "$COIN_LIST" -f "%c:%H" --s2d; }
 mcap()  { rate -o "$COIN_LIST" -f "%c:%m"; }
 fold()  { echo "$fold"; }
 
