@@ -1,7 +1,7 @@
 #!/bin/sh
 # restart sound related programs and pipewire itself
 
-easyeffects --quit
+pkill easyeffects
 
 # restart pipewire
 systemctl --user restart pipewire.service
@@ -13,9 +13,9 @@ wait
 mpd --kill
 mpd
 pkill mpdas
-setsid -f mpdas -d
+mpdas -d
 pkill mpdup
 setsid -f mpdup
-setsid -f easyeffects --gapplication-service
+setsid -f easyeffects
 printf "\n%s\n" "Use ^C to exit out of junk outputted by easyeffects to terminal."
 # WARNINGS etc. dunno how to suppress that...
