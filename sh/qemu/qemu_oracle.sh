@@ -21,8 +21,16 @@
 img="/mnt/main/DAUNLOD/ISO/oracle_linux/img/overlays/oracle_linux_8.4_nvim.cow"
 
 # shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements.
+# -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp:127.0.0.1:9001-:22 \
+# -vga cirrus \
 # -display sdl -vga std \
-qemu-system-x86_64 $@ -m 8G -enable-kvm -cpu host -usbdevice tablet \
--machine q35 -vga cirrus \
--device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp:127.0.0.1:9001-:22 \
+# -machine q35 -cpu host -accel kvm \
+# -accel kvm \
+# -display sdl -vga std \
+# -cpu host -smp cores=2,threads=1 \
+qemu-system-x86_64 $@ -m 8G -usbdevice tablet \
+-machine type=q35,accel=kvm \
+-cpu host -smp "$(nproc)" \
+-vga std \
+-device e1000,netdev=net0 -netdev user,id=net0 \
 "$img"
