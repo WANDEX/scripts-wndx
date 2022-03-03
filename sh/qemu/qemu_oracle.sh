@@ -17,10 +17,12 @@
 # to mount usb-flash:
 # sudo mount -o defaults,uid=1000,gid=998 -v UUID=C0AB-9DEE "/mnt/usb_qemu" >/dev/null 2>&1
 
-img="/mnt/main/DAUNLOD/ISO/oracle_linux/img/oracle_linux_8.4.cow"
-# img="/mnt/main/DAUNLOD/ISO/oracle_linux/img/ovelays/oracle_linux_8.4_clean.cow"
+# img="/mnt/main/DAUNLOD/ISO/oracle_linux/img/oracle_linux_8.4.cow"
+img="/mnt/main/DAUNLOD/ISO/oracle_linux/img/overlays/oracle_linux_8.4_nvim.cow"
 
 # shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements.
+# -display sdl -vga std \
 qemu-system-x86_64 $@ -m 8G -enable-kvm -cpu host -usbdevice tablet \
+-machine q35 -vga cirrus \
 -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp:127.0.0.1:9001-:22 \
 "$img"
