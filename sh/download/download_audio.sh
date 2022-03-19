@@ -17,6 +17,7 @@ OPTIONS
     -e, --end       If url is playlist - how many items to download (by default all:-1)
     -h, --help      Display help
     -p, --path      Destination path where to download
+    -n, --notify    Toggle showing of desktop notifications
     -r, --restrict  Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url       URL to download
     -y, --ytdl      Any other youtube-dl native options (specify only inside \"\")
@@ -120,11 +121,13 @@ notify() {
             CLR="$DEF_S"
         ;;
     esac
-    if at_path dunstify; then
-        DSTT="string:x-dunst-stack-tag:[download_audio.sh]($URL)"
-        dunstify -u "$urg" -h "$DSTT" "D[AUDIO] $1" "\n$2\n"
-    else
-        notify-send -u "$urg" "D[AUDIO] $1" "\n$2\n"
+    if [ "$DNOTIFY" -eq 1 ]; then
+        if at_path dunstify; then
+            DSTT="string:x-dunst-stack-tag:[download_audio.sh]($URL)"
+            dunstify -u "$urg" -h "$DSTT" "D[AUDIO] $1" "\n$2\n"
+        else
+            notify-send -u "$urg" "D[AUDIO] $1" "\n$2\n"
+        fi
     fi
     [ -n "$1" ] && printf "${CLR}${1}${END}\n"
     [ -n "$2" ] && printf "${CLR}${2}${END}\n"
@@ -132,12 +135,13 @@ notify() {
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=e:hp:ru:y:
-    LONG=end:,help,path:,restrict,url:,ytdl:
+    SHORT=e:hnp:ru:y:
+    LONG=end:,help,notify,path:,restrict,url:,ytdl:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     URL="$(xclip -selection clipboard -out)"
     PEND=-1
+    DNOTIFY=1
     restr=()
     YTDLOPTS=()
     eval set -- "$OPTIONS"
@@ -161,6 +165,9 @@ get_opt() {
         -h|--help)
             echo "$USAGE"
             exit 0
+            ;;
+        -n|--notify)
+            [ "$DNOTIFY" -eq 1 ] && DNOTIFY=0 || DNOTIFY=1 # toggle behavior of value
             ;;
         -p|--path)
             shift
