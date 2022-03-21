@@ -6,6 +6,7 @@ week=$(date +"week-%V-%Y.txt")
 week_file="$POMODORO_HOME/$week"
 todo_file="$POMODORO_HOME/TODO.txt"
 hist="$RLWRAP_HOME/pomodoro_history"
+ignore="$RLWRAP_HOME/pomodoro_ignore"
 export RLWRAP_FILTERDIR="$SCRIPTS/py/rlwrap_filter/"
 filter_name="filter_completion.py"
 
@@ -15,11 +16,12 @@ digits='\d+' # simple digits
 #forget_hist_2='^.*\^\[' # ^[, key^[ etc.
 
 # create files if they do not exist
-[ ! -f "$week_file" ] && echo "" >> "$week_file"
-[ ! -f "$todo_file" ] && echo "" >> "$todo_file"
+[ -f "$week_file" ] || touch "$week_file"
+[ -f "$todo_file" ] || touch "$todo_file"
 
 # r - option adds junk characters into completion list at runtime -> after filter!
 # that's why filter cannot remove them
 rlwrap -ir -C pomodoro \
+    --forget-matching "cook" \
     -z "$filter_name -a '$week_file' -a '$todo_file' -a '$hist' \
-    -f '$week_file' -r '$date_from_to' -r '$digits'" pomodoro
+    -f '$ignore' -f '$week_file' -r '$date_from_to' -r '$digits'" pomodoro
