@@ -24,4 +24,4 @@ digits='\d+' # simple digits
 rlwrap -ir -C pomodoro \
     --forget-matching "cook" \
     -z "$filter_name -a '$week_file' -a '$todo_file' -a '$hist' \
-    -f '$ignore' -f '$week_file' -r '$date_from_to' -r '$digits'" pomodoro
+-f '$ignore' -f '$week_file' -r '$date_from_to' -r '$digits'" pomodoro
