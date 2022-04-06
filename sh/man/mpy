@@ -1,46 +1,52 @@
 #!/bin/sh
 # search locally and open python doc man page in $MANPAGER
-CACHE_DIR="$HOME"'/.cache/man/python/'
-UPDATE="$CACHE_DIR"'update_cache'
-K_FILE="$CACHE_DIR"'keywords'
-M_FILE="$CACHE_DIR"'modules'
-T_FILE="$CACHE_DIR"'topics'
-A_FILE="$CACHE_DIR"'all'
 
-init() {
-    mkdir -p "$CACHE_DIR"
-    [ ! -f "$UPDATE" ] && touch "$UPDATE" # create menu item for update_cache method
+CACHE_DIR="$HOME/.cache/man/python"
+[ -d "$CACHE_DIR" ] || mkdir -p "$CACHE_DIR"
+
+K_FILE="$CACHE_DIR/keywords"
+M_FILE="$CACHE_DIR/modules"
+T_FILE="$CACHE_DIR/topics"
+A_FILE="$CACHE_DIR/all"
+
+prf() {
+    if [ -z "$1" ] || [ -z "$2" ]; then
+        echo "not enough args"
+        exit 4
+    fi
+    echo "$1" | tail -n +3 | cut -d' ' -f1- --output-delimiter=$'\n' | awk NF | sort > "$2"
 }
 
 update_cache() {
-    python -m pydoc keywords | tail -n +3 | cut -d' ' -f1- --output-delimiter=$'\n' | awk NF | sort > "$K_FILE" &
-    python -m pydoc modules | tail -n +3 | cut -d' ' -f1- --output-delimiter=$'\n' | awk NF | sort > "$M_FILE" &
-    python -m pydoc topics | tail -n +3 | cut -d' ' -f1- --output-delimiter=$'\n' | awk NF | sort > "$T_FILE" &
+    prf "$(python -m pydoc keywords)" "$K_FILE" &
+    prf "$(python -m pydoc modules )" "$M_FILE" &
+    prf "$(python -m pydoc topics  )" "$T_FILE" &
     wait
-    ls "$CACHE_DIR"* | grep -vw 'all' | xargs -r cat > "$A_FILE"
+    find "$CACHE_DIR" -type f \( ! -name all \) | xargs -r cat > "$A_FILE"
 }
 
-interactive() {
-    # first arg
-    items=$(ls -l "$CACHE_DIR" | awk '{print $9}' | awk NF)
-    item=$(echo "$items" | dmenu -p 'enter item to subsearch:' -l 30)
-    # substring
+run() {
+    items="$(find "$CACHE_DIR" -type f -printf "%f\n")"
+    item="$(printf "%s\n%s\n" "$items" "update_cache" | dmenu -p 'enter item to subsearch:' -l 30)"
+    [ -z "$item" ] && exit 0
     case "$item" in
         "update_cache")
+            # run again after cache is updated
             update_cache
-            return 8 # return from function, to run it, after update_cache
+            run
+            return 0 # essential
         ;;
         "keywords")
-            cache=$(cat "$K_FILE")
+            cache="$(cat "$K_FILE")"
         ;;
         "modules")
-            cache=$(cat "$M_FILE")
+            cache="$(cat "$M_FILE")"
         ;;
         "topics")
-            cache=$(cat "$T_FILE")
+            cache="$(cat "$T_FILE")"
         ;;
         "all")
-            cache=$(cat "$A_FILE")
+            cache="$(cat "$A_FILE")"
         ;;
         *)
             exit 0
@@ -53,10 +59,4 @@ interactive() {
     fi
 }
 
-main() {
-    init
-    interactive
-    [ "$?" -eq 8 ] && interactive # in case the update_cache was selected
-}
-
-main "$@"
+run
