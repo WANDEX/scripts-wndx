@@ -9,12 +9,15 @@ M_FILE="$CACHE_DIR/modules"
 T_FILE="$CACHE_DIR/topics"
 A_FILE="$CACHE_DIR/all"
 
+NL='
+' # New Line (POSIX)
+
 prf() {
     if [ -z "$1" ] || [ -z "$2" ]; then
         echo "not enough args"
         exit 4
     fi
-    echo "$1" | tail -n +3 | cut -d' ' -f1- --output-delimiter=$'\n' | awk NF | sort > "$2"
+    echo "$1" | tail -n +3 | cut -d' ' -f1- --output-delimiter="$NL" | awk NF | sort > "$2"
 }
 
 update_cache() {
@@ -22,7 +25,8 @@ update_cache() {
     prf "$(python -m pydoc modules )" "$M_FILE" &
     prf "$(python -m pydoc topics  )" "$T_FILE" &
     wait
-    find "$CACHE_DIR" -type f \( ! -name all \) | xargs -r cat > "$A_FILE"
+    # -print0 & -0 is for shellcheck (SC2038)
+    find "$CACHE_DIR" -type f \( ! -name all \) -print0 | xargs -0 -r cat > "$A_FILE"
 }
 
 run() {
@@ -55,7 +59,7 @@ run() {
     if [ -t 0 ]; then
         echo "$cache" | dmenu -i -p 'enter man page name: ' -l 30 | xargs -r -o python -m pydoc
     else
-        echo "$cache" | dmenu -i -p 'enter man page name: ' -l 30 | xargs -r $TERMINAL -e python -m pydoc
+        echo "$cache" | dmenu -i -p 'enter man page name: ' -l 30 | xargs -r "$TERMINAL" -e python -m pydoc
     fi
 }
 
