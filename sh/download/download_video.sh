@@ -209,7 +209,7 @@ statistic() {
 
 ytdl_cmd() {
     url="$1"
-    youtube-dl --console-title --ignore-errors --yes-playlist \
+    yt-dlp --console-title --ignore-errors --yes-playlist \
         "${pindex[@]}" --playlist-start="$START" --playlist-end="$END" \
         --write-sub --sub-lang en,ru --sub-format "ass/srt/best" --embed-subs \
         --format "$FORMAT" --output "$OUTPATH" "${restr[@]}" "${YTDLOPTS[@]}" "$url"
