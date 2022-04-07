@@ -1,6 +1,7 @@
 #!/bin/sh
 # change notification text that stream is started with full stream path at body
 # and add ACTION into notification
+# shellcheck disable=SC2034 # appears unused
 appname="$1"
 summary="$2"
 body="$3"

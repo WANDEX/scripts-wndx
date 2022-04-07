@@ -1,6 +1,7 @@
 #!/bin/sh
 # show notification when process with encoding is finished (vanished)
 # and add ACTION to copy $out_path to clipboard or open video in mpv
+# shellcheck disable=SC2034 # appears unused
 appname="$1"
 summary="$2"
 body="$3"

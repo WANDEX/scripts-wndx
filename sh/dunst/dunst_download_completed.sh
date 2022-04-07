@@ -1,6 +1,7 @@
 #!/bin/sh
 # stop inf loop in dunst_download_started.sh
 # and replace original notification about download completion
+# shellcheck disable=SC2034 # appears unused
 appname="$1"
 summary="$2"
 body="$3"

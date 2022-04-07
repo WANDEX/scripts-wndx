@@ -3,6 +3,7 @@
 # default ytdl window title with --console-title option:
 # when downloading: "youtube-dl  30.3% of 432.50MiB at  4.27MiB/s ETA 01:10"
 # when downloaded:  "youtube-dl 100% of 12.36MiB in 00:01"
+# shellcheck disable=SC2034 # appears unused
 appname="$1"
 summary="$2"
 body="$3"
