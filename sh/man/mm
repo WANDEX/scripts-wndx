@@ -1,10 +1,14 @@
 #!/bin/sh
-# invoke one of a man search scripts located inside file dir
-abs_dir_path=$(dirname "$(realpath "$0")")
-cd "$abs_dir_path" || exit
-scripts=$(ls | grep -vw $(basename "$0")) # excluding this file itself
-echo "$scripts" | dmenu -i -p 'choose man search script: ' | xclip -in
-selection="$(xclip -out)"
-script_path="$abs_dir_path"'/'"$selection"
-# if script exist and executable -> execute
-[ -x "$script_path" ] && "$script_path"
+# select and invoke one of a doc(man) search scripts located inside the file dir
+fname="$(basename "$0")"
+fpath="$(realpath "$0")"
+dpath="$(dirname "$fpath")"
+# elements are filenames within a directory, excluding the file itself
+scripts="$(find "$dpath" -type f \( ! -name "$fname" \) -printf "%f\n" | sort)"
+select="$(echo "$scripts" | dmenu -i -p 'choose man search script: ')"
+script_path="${dpath}/${select}"
+# if select was not canceled, script exist and executable -> run script
+[ -n "$select" ]      || exit 1
+[ -f "$script_path" ] || exit 2
+[ -x "$script_path" ] || exit 3
+"$script_path"
