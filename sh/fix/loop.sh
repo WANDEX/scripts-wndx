@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # execute command in infinite loop
 
 USAGE=$(printf "%s" "\
