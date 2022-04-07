@@ -5,7 +5,7 @@ if [ -t 0 ]; then
     man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}' | xargs -r man
 else
     # spawn $TERMINAL and execute (works with dmenu)
-    man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}' | xargs -r $TERMINAL -e man
+    man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}' | xargs -r "$TERMINAL" -e man
 fi
 
 ## open man page as pdf in zathura
