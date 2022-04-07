@@ -7,7 +7,7 @@ CURRENT_VARIANT=$(setxkbmap -query | grep -i 'variant:' | awk '{print $2}' | sed
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 notify() {
     if at_path dunstify; then
-        dunstify -u "low" -h "$DST:kb.sh" -h "$DST:hi" "$1"
+        dunstify -u low -h "$DST:kb.sh" -h "$DST:hi" "$1"
     else
         notify-send -u low "$1"
     fi
@@ -21,5 +21,4 @@ else
     notify "⌨ QWERTY"
 fi
 
-xset r rate 200 50
-
+xset r rate 200 60
