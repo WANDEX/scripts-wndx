@@ -1,6 +1,6 @@
 #!/bin/sh
 # Load PSEye mic preset
-DEVPATH=$"/dev/snd/by-path/pci-0000:00:1a.0-usb-0:1.6:1.1"
+DEVPATH="/dev/snd/by-path/pci-0000:00:1a.0-usb-0:1.6:1.1"
 if [ -e "$DEVPATH" ]; then
     #pulseaudio -k &&
     #pulseaudio --start
@@ -12,9 +12,9 @@ if [ -e "$DEVPATH" ]; then
     pactl load-module module-loopback
     pactl set-default-source echoCancel_source
     #pactl set-default-sink echoCancel_sink
-    printf "$DEVPATH\nEXIST\n"
+    printf "%s\n%s\n" "$DEVPATH" "EXIST"
 else
     pactl unload-module module-loopback
     pactl unload-module module-echo-cancel
-    printf "$DEVPATH\nDOES NOT EXIST\n"
+    printf "%s\n%s\n" "$DEVPATH" "DOES NOT EXIST"
 fi
