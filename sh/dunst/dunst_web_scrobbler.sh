@@ -3,6 +3,7 @@
 # do not show notification
 # Looks like sometimes extension just skips showing it's original notification
 # Dunno why, but sometimes extension by itself does not show notification
+# shellcheck disable=SC2034 # appears unused
 appname="$1"
 summary="$2"
 body="$3"
@@ -16,11 +17,11 @@ FILE="$CSCRDIR/bar/music-web" # hardcoded, check music-web script!
 
 # -> it's essential because we match notification by 'SoundCloud' to run this script
 # replace 'SoundCloud' pattern and '&'
-# body="$(echo "$body" | sed "s/SoundCloud//g; s/&amp\;/\&/g")"
+body="$(echo "$body" | sed "s/SoundCloud//g; s/&amp\;/\&/g")"
 
 # maybe bash string replacement more stable than sed?
-body="${body/SoundCloud}" # Remove part of the text.
-body="${body//&amp\;/\&}" # Replace all matches in the text
+# body="${body/SoundCloud}" # Remove part of the text.
+# body="${body//&amp\;/\&}" # Replace all matches in the text
 
 track="$summary"
 artist="$(echo "$body" | awk 'NR==3')" # extract artist from line 3
