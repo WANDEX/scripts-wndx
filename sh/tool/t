@@ -1,6 +1,6 @@
 #!/bin/sh
 # simple stopwatch & timer
-# without arguments -> start stopwatch, stop it with any key
+# without arguments -> start stopwatch, stop it with ^C
 
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
@@ -15,6 +15,8 @@ $bname 5m
 $bname -t 1h
 $bname -t 1h33m7s
 ")
+
+at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 
 get_opt() {
     # Parse and read OPTIONS command-line options
@@ -57,18 +59,13 @@ get_opt() {
 
 get_opt "$@"
 
-any_key(){
-    # return 1 if sleep timer ended or 0 if any key
-    read -r -n 1 -t "$s"
-}
-
 ext_num(){
     # extract number by letter & convert to seconds
     num=$(echo "$timer" | grep -Eio "[0-9]{1,}$1" | sed "s/$1[ ]*//g")
     if [ -n "$num" ]; then
         case "$1" in
-            [Hh]) echo "$num*60*60" | bc ;;
-            [Mm]) echo "$num*60" | bc ;;
+            [Hh]) echo "$((num*60*60))" ;;
+            [Mm]) echo "$((num*60))" ;;
             [Ss]) echo "$num" ;;
             *) echo 0 ;;
         esac
@@ -82,35 +79,35 @@ sec_sum() {
     H=$(ext_num "h")
     M=$(ext_num "m")
     S=$(ext_num "s")
-    echo "$H+$M+$S" | bc
+    echo $((H+M+S))
 }
 
 countdown() {
     sec=$(sec_sum)
     edate=$(($(date +%s) + "$sec"));
     while [ "$edate" -ge "$(date +%s)" ]; do
-        echo -ne " [$(date -u --date @$(("$edate" - $(date +%s))) +"$DATEF")]\r"
-        any_key && return # return from function without notification if timer explicitly stopped
+        printf "  %s\r" "[$(date -u --date @$(("$edate" - $(date +%s))) +"$DATEF")]"
+        sleep "$s"
     done
-    while true; do
-        msg=$(dunstify -b -u critical -h "$DST:t" -h "$DST:hi" "[t] $tname ENDED" "[$timer] CLOSE ME!")
-        [ "$msg" = "2" ] && break # output will be '2' if notification is manually closed
-    done
+    if at_path dunstify; then
+        while true; do
+            msg=$(dunstify -b -u critical -h "$DST:t" -h "$DST:hi" "[t] $tname ENDED" "[$timer] CLOSE ME!")
+            [ "$msg" = "2" ] && break # output will be '2' if notification is manually closed
+        done
+    fi
 }
 
 stopwatch() {
     sdate=$(date +%s);
     while true; do
-        echo -ne " [$(date -u --date @$(($(date +%s) - "$sdate")) +"$DATEF")]\r"
-        any_key && break
+        printf "  %s\r" "[$(date -u --date @$(($(date +%s) - "$sdate")) +"$DATEF")]"
+        sleep "$s"
     done
 }
 
-tput civis # hide cursor
 if [ "$timer" ]; then
     countdown
 else
     stopwatch
 fi
 echo # new line -> leave last output line untouched
-tput cnorm # restore cursor
