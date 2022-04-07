@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Convert new files at .mpv_encode/source/ dir to .mp4
 # and output with same dir hierarchy to .mpv_encode/tg/ dir
 DIR="$HOME"'/Films/.mpv_encode/'
@@ -11,7 +11,7 @@ HRRCH_OLD="$DIR_HRRCH"'.hierarchy_old'
 
 mkdir -p "$DIR_TG" "$DIR_META" "$DIR_HRRCH"
 touch "$HRRCH_NEW" "$HRRCH_OLD"
-cd "$DIR_SRC"
+cd "$DIR_SRC" || exit 4
 # find all files relative to current dir and ignore hidden .dot files
 find . -type f \( ! -iname ".*" \) > "$HRRCH_NEW"
 UNCOMM=$(comm -23 "$HRRCH_NEW" "$HRRCH_OLD") # only new files
@@ -34,7 +34,7 @@ convert() {
 
 while IFS= read -r file; do
     if [ -e "$file" ]; then
-        name="$(basename ${file%.*})" # remove .ext part from file name
+        name="$(basename "${file%.*}")" # remove .ext part from file name
         rdir=$(dirname "$file" | cut -d'/' -f2-)
         parents="$DIR_TG"'/'"$rdir"
         mkdir -p "$parents"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # glue together video files with re-encoding where each file provided as next argument
 
 DIR="rg/"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # convert all video files where each file provided as next argument
 
 # if at least 2 arguments given create & output into sub dir

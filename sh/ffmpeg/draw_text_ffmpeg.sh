@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # generate video file with text in the center of the screen
 
 USAGE=$(printf "%s" "\
