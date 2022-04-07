@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # translate dmenu input or clipboard content and show in notification
 
 USAGE=$(printf "%s" "\
