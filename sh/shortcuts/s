@@ -1,44 +1,39 @@
 #!/bin/sh
-# general way to use shortcuts
+# return path of the shortcut selected by the fzf as the output
 # shortcuts file structure: first column - alias, second column - "path"
 
-# SOURCE GLOBALLY DEFINED TERMINAL COLOR VARIABLES
-# shellcheck disable=SC1091
-# shellcheck source=$ENVSCR/termcolors
-TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
-
-TRM="\r\033[K"
-
-# define CONST variables!
-dd=0
-ff=0
-passthrough=0
-
 FILE="$CONF/shortcuts"
+if [ ! -r "$FILE" ]; then
+    printf "%s\n^%s\n" "$FILE" "shortcuts file not readable, exit."
+    exit 2
+fi
+
 # remove everything after # character and empty lines with/without spaces
-SHORTCUTS=$(cat "$FILE" | sed "s/[[:space:]]*#.*$//g; /^[[:space:]]*$/d")
+SHORTCUTS="$(sed "s/[[:space:]]*#.*$//g; /^[[:space:]]*$/d" "$FILE")"
 
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $(basename "$0") [OPTION...] any amount of query args
 OPTIONS
     -e, --edit          Edit shortcuts file with \$EDITOR
     -h, --help          Display help
     -l, --list          Show list of all shortcuts
-    -p, --pass-through  Print raw path as output
+    -q, --query         Only one query argument (overrides trailing query args)
     --exclude-dirs      Exclude paths with directories as last element - /
 ")
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=ehlp
-    LONG=edit,help,list,pass-through,exclude-dirs
+    SHORT=ehlq:
+    LONG=edit,help,list,query:,exclude-dirs
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
+    # shellcheck disable=SC2089 # Quotes/backslashes will be treated literally
+    QOPT="--query='" # ' to do exact match
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
         -e|--edit)
-            exec $EDITOR "$FILE"
+            exec "$EDITOR" "$FILE"
             ;;
         -h|--help)
             echo "$USAGE"
@@ -48,14 +43,21 @@ get_opt() {
             echo "$SHORTCUTS"
             exit 0
             ;;
-        -p|--pass-through)
-            passthrough=1
+        -q|--query)
+            shift
+            # supports only one arg!
+            QUERY="${QOPT}$1"
             ;;
         --exclude-dirs)
-            SHORTCUTS=$(echo "$SHORTCUTS" | sed "/.*\/[\"']$/d")
+            SHORTCUTS="$(echo "$SHORTCUTS" | sed "/.*\/[\"']$/d")"
             ;;
         --)
             shift
+            # do not override QUERY if was passed via option
+            if [ -z "$QUERY" ] && [ -n "${*}" ]; then
+                # support any amount of args after all other options!
+                QUERY="${QOPT}${*}"
+            fi
             break
             ;;
         esac
@@ -65,58 +67,16 @@ get_opt() {
 
 get_opt "$@"
 
-[ -n "$1" ] && QUERY="--query='$1" # do exact match
-MATCH=$(echo "$SHORTCUTS" | fzf -i --select-1 "${QUERY[@]}" | awk '{print $2}' | sed "s/[\"\']//g")
-MATCH=$(echo "$MATCH" | envsubst)
-if [ "$passthrough" -eq 1 ]; then
-    echo "$MATCH"
-    # This should be one of the end branches of the script
+# fixes: even if QUERY variable is not defined fzf will complain about 'unknown option'
+if [ -z "$QUERY" ]; then
+    MATCH=$(echo "$SHORTCUTS" | fzf -i --select-1)
 else
-    if [ -d "$MATCH" ]; then
-        dd=1
-    else
-        Q="as ${YEL}f${END}ile / as ${YEL}d${END}ir? [f/d] "
-        while true; do
-            read -p "$Q" -n 1 -r
-            printf "$TRM%s" "" # remove previous line
-            case "$REPLY" in
-                [Ff]*) ff=1; break;;
-                [Dd]*) dd=1; break;;
-                *) echo "${RED}I don't get it.${END}";;
-            esac
-        done
-    fi
-    if [ "$ff" -eq 1 ]; then
-        if [ -f "$MATCH" ]; then
-            Q="\$${YEL}E${END}DITOR / \$${YEL}P${END}AGER? [e/p] "
-            read -p "$Q" -n 1 -r
-            printf "$TRM%s" "" # remove previous line
-            case "$REPLY" in
-                [Ee]*) "$EDITOR" "$MATCH";;
-                [Pp]*) page < "$MATCH";;
-                *) echo "${RED}I don't get it.${END}";;
-            esac
-        else
-            echo "[$MATCH] is not valid file. exit."
-            exit 1
-        fi
-    elif [ "$dd" -eq 1 ]; then
-        [ -f "$MATCH" ] && MATCH=$(dirname "$MATCH") # remove file from end of the path
-        if [ -d "$MATCH" ]; then
-            Q="${YEL}c${END}d/${YEL}r${END}anger? [c/r] "
-            read -p "$Q" -n 1 -r
-            printf "$TRM%s" "" # remove previous line
-            case "$REPLY" in
-                #[Cc]*) cd "$MATCH" && exec $SHELL;; # creates subshell!
-                [Cc]*) printf "cd %s" "$MATCH" | xclip && $(sleep 1 && xdotool click 2 && xdotool key Return) &;;
-                [Rr]*) ranger "$MATCH";;
-                *) echo "${RED}I don't get it.${END}";;
-            esac
-        else
-            echo "[$MATCH] is not valid dir. exit."
-            exit 1
-        fi
-    fi
-    # This should be one of the end branches of the script
+    MATCH=$(echo "$SHORTCUTS" | fzf -i --select-1 "$QUERY")
 fi
+[ -n "$MATCH" ] || exit 0 # handle cancel input
 
+# get path & remove surrounding quotes if any
+MATCH=$(echo "$MATCH" | awk '{print $2}' | sed "s/[\"\']//g")
+# used to unpack env vars into the actual value (fixes: inaccessible paths errors etc.)
+MATCH=$(echo "$MATCH" | envsubst)
+echo "$MATCH"
