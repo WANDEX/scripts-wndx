@@ -1,6 +1,11 @@
 #!/bin/sh
 # shortcut - [cd] stands for cd (cd to pasted dir)
+# currently this works via a hack:
+# 1) mouse cursor must be above the terminal emulator window (focused)
+# 2) middle mouse click pastes cd command with path, then Return is pressed
 
-MATCH=$(s "$1" --pass-through)
-[ -f "$MATCH" ] && MATCH=$(dirname "$MATCH") # remove file from end of the path
-printf "cd %s" "$MATCH" | xclip && $(sleep 1 && xdotool click 2 && xdotool key Return) &
+MATCH="$(s "${*}")"
+[ -n "$MATCH" ] || exit 0 # handle cancel input
+[ -d "$MATCH" ] || MATCH="$(dirname "$MATCH")" # remove file from end of the path
+printf "cd %s" "$MATCH" | xclip &&
+xdotool click 2 && xdotool key Return

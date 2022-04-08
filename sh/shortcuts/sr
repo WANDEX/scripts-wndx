@@ -1,6 +1,7 @@
 #!/bin/sh
 # shortcut - [r] stands for ranger
 
-MATCH=$(s "$1" --pass-through)
-[[ -f $MATCH ]] && MATCH=$(dirname "$MATCH") # remove file from end of the path
-ranger "$MATCH"
+MATCH="$(s "${*}")"
+[ -n "$MATCH" ] || exit 0 # handle cancel input
+[ -d "$MATCH" ] || MATCH="$(dirname "$MATCH")" # remove file from end of the path
+exec ranger "$MATCH"

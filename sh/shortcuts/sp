@@ -1,5 +1,6 @@
 #!/bin/sh
 # shortcut - [p] stands for $PAGER
 
-MATCH=$(s "$1" --pass-through --exclude-dirs)
-cat "$MATCH" | page
+MATCH="$(s --exclude-dirs "${*}")"
+[ -n "$MATCH" ] || exit 0 # handle cancel input
+exec page "$MATCH"
