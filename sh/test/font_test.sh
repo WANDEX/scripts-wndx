@@ -1,38 +1,33 @@
 #!/bin/sh
 # terminal font test
 
-# SOURCE GLOBALLY DEFINED TERMINAL COLOR VARIABLES
-# shellcheck disable=SC1091
-# shellcheck source=$ENVSCR/termcolors
-TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
-
 # BOLD, ITALIC, UNDERLINE
 BLD=$(printf '\e[1m')
 ITQ=$(printf '\e[3m')
 UND=$(printf '\e[4m')
 END=$(printf '\e[0m')
 
-read -r -d '' BOXDC <<- EOF
+BOXDC=$(printf "%s" "\
 ┌─┬─┐ ╔═╦═╗ ┏━┳━┓        ▏ ▕
 ├─┼─┤ ╠═╬═╣ ┣━╋━┫ ╭───╮ ╱╲ ╱╲
 │ │ │ ║ ║ ║ ┃ ┃ ┃ │ x │ ▏▏╳▕▕
 └─┴─┘ ╚═╩═╝ ┗━┻━┛ ╰───╯ ▏───▕
 ░▒▓█▄▀■ [TERMINAL=$TERMINAL]
-EOF
+")
 
 # U+202F   NARROW NO-BREAK SPACE -> ' '
-read -r -d '' TEXT <<- EOF
+TEXT=$(printf "%s" "\
 ABCDEFGHIJKLMNOPQRSTUVWXYZ
 abcdefghijklmnopqrstuvwxyz
 АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ
 абвгдеёжзийклмнопрстуфхцчшщъыьэюя
-0123456789 ()[]{}<> '' "" \`\`
+0123456789 ()[]{}<> '' \"\" \`\`
 ?!@#$%^&*№ +-=><-_+ \\/| .,:;
 > Almost before we knew it,
 we had left the ground.
 > Алая вспышка осветила
 силуэт зазубренного крыла.
-EOF
+")
 
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
@@ -154,4 +149,3 @@ if [ -z "$message" ]; then
 else
     printf "%s\n" "$message"
 fi
-
