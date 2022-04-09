@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #   This file echoes a bunch of color codes to the
 #   terminal to demonstrate what's available.  Each
@@ -10,8 +10,7 @@
 
 T='gYw'   # The test text
 
-echo -e "\n                 40m     41m     42m     43m\
-     44m     45m     46m     47m";
+printf "\n\t\t %s\n" "40m     41m     42m     43m     44m     45m     46m     47m"
 
 for FGs in '    m' '   1m' '  30m' '1;30m' '  31m' '1;31m' '  32m' \
            '1;32m' '  33m' '1;33m' '  34m' '1;34m' '  35m' '1;35m' \

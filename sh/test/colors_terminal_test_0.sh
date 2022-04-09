@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Modified by Aaron Griffin
 # and further by Kazuo Teramoto
 FGNAMES=(' black ' '  red  ' ' green ' ' yellow' '  blue ' 'magenta' '  cyan ' ' white ')
