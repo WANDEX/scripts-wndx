@@ -100,8 +100,10 @@ for coin_name in "${clarr[@]}"; do
         for words in $output; do
             case "$words" in
                 *"$coin_name"*)
-                    output="$(echo "$output" | sed "s/${words}/${words}\(${pro}\)/")"
-                    ;;
+                    # output="$(echo "$output" | sed "s/${words}/${words}\(${pro}\)/")"
+                    # shellckeck fix: See if you can use ${variable//search/replace} instead. (I2001)
+                    output="${output//${words}/${words}\(${pro}\)}"
+                ;;
             esac
         done
     fi
