@@ -1,10 +1,25 @@
 #!/bin/bash
-# requires sudo for updating servers in '/etc/pacman.d/mirrorlist'
+# requires sudo for updating mirrorlist in '/etc/pacman.d/mirrorlist'
 
-sudo reflector -p https --age 24 --fastest 50 --latest 25 --sort rate \
-    --download-timeout 30 --save /etc/pacman.d/mirrorlist && \
-    notify-send "🆙 $(basename $0)" "mirrorlist updated" || \
-    notify-send -u critical "🆙 $(basename $0)" "error"
-rm -f /etc/pacman.d/mirrorlist.pacnew && \
-    notify-send -u low "🆙 $(basename $0)" "rm -f is OK" || \
-    notify-send -u critical "🆙 $(basename $0)" "rm error"
+bname="$(basename "$0")"
+mlist="/etc/pacman.d/mirrorlist"
+mlnew="${mlist}.pacnew"
+
+if sudo reflector -p https --age 24 --fastest 50 --latest 25 --sort rate \
+    --download-timeout 30 --save "$mlist"
+then
+    notify-send -t 0 "🆙[$bname]" "mirrorlist updated"
+else
+    notify-send -t 0 -u critical "[$bname]" "error"
+    exit 1
+fi
+
+[ -f "$mlnew" ] || exit 0
+
+if sudo rm -f "$mlnew"
+then
+    notify-send -t 0 -u low "🆙[$bname]" "rm -f is OK"
+else
+    notify-send -t 0 -u critical "[$bname]" "rm error"
+    exit 2
+fi
