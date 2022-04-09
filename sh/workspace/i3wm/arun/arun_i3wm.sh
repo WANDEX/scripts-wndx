@@ -5,17 +5,13 @@ task() {
     echo "$1" | xargs -I % -ot sh -c 'sleep 1.0 && % &>/dev/null'
 }
 
-main() {
-    local abs_dir_path=$(dirname $(realpath "$0"))
-    # get abs path of all files excluding .dot files and this file itself
-    local scripts=$(find "$abs_dir_path" -type f -executable \( ! -iname ".*" ! -iname $(basename "$0") \))
+abs_dir_path="$(dirname "$(realpath "$0")")"
+bname="$(basename "$0")"
+# get abs path of all files excluding .dot files and this file itself
+scripts="$(find "$abs_dir_path" -type f -executable \( ! -iname "$bname" \))"
 
-    for script in "$scripts"; do
-        task "$script"
-    done
+for script in $scripts; do
+    task "$script"
+done
 
-    sleep 2 && i3-msg -q workspace $WS1
-}
-
-main "$@"
-
+sleep 2 && i3-msg -q workspace "$WS1"
