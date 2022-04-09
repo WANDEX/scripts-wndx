@@ -47,7 +47,7 @@ write_to_file() {
 fold_elem() {
     last_line=$(tail -n 1 "$file")
     # toggle between fold/unfold
-    if [[ "$last_line" == "$fold" ]]; then
+    if [ "$last_line" = "$fold" ]; then
         sed -i '$d' "$file" # remove last line
     else
         # write to end of a file
@@ -57,18 +57,18 @@ fold_elem() {
 
 case $BLOCK_BUTTON in
     1) write_to_file && setsid -f "$TERMINAL" -e less -Srf "$file" ;;
-    2) fold_elem ; kill -$SIG $(pidof dwmblocks) ;;
+    2) fold_elem ; kill "-$SIG" "$(pidof dwmblocks)" ;;
     3) notify-send "🌈 Weather module" "\- Left click for full forecast.
 - MMB fold/unfold $fold
 💧: Todays maximum probability of rain/snow
 Daily low - Daily high" ;;
-    4) _LOC="$LOC0" ; kill -$SIG $(pidof dwmblocks) ;;
-    5) _LOC="$LOC1" ; kill -$SIG $(pidof dwmblocks) ;;
+    4) _LOC="$LOC0" ; kill "-$SIG" "$(pidof dwmblocks)" ;;
+    5) _LOC="$LOC1" ; kill "-$SIG" "$(pidof dwmblocks)" ;;
     6) "$TERMINAL" -e "$EDITOR" "$0" ;;
 esac
 
 last_line=$(tail -n 1 "$file")
-if [[ "$last_line" == "$fold" ]]; then
+if [ "$last_line" = "$fold" ]; then
     echo "$fold"
 else
     #LOC="${_LOC:-"$LOC0"}"
