@@ -1,10 +1,6 @@
 #!/bin/sh
-# print all available font family variants
-
-# SOURCE GLOBALLY DEFINED TERMINAL COLOR VARIABLES
-# shellcheck disable=SC1091
-# shellcheck source=$ENVSCR/termcolors
-TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
+# show/test all available font family variants
+# NOTE: for work sh/fix/any_key.sh script is required!
 
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
@@ -19,7 +15,7 @@ OPTIONS
 
 # read into variable using 'Here Document' code block
 # all available font styles presorted
-read -d '' STYLES <<- EOF
+STYLES=$(printf "%s" "\
 Thin
 Demi
 Light
@@ -45,10 +41,10 @@ Black
 ExtraBold
 Heavy
 Ultra
-EOF
+")
 
 get_family_styles() {
-    if [[ $1 == all ]]; then
+    if [ "$1" = all ]; then
         arg=":"
     else
         arg="$1"
@@ -110,7 +106,7 @@ get_opt() {
 
 get_opt "$@"
 
-tmpd="${TMPDIR:-/tmp/}$(basename $0)" && mkdir -p "$tmpd"
+tmpd="${TMPDIR:-/tmp/}$(basename "$0")" && mkdir -p "$tmpd"
 tmpf=$(mktemp "$tmpd/XXXX")
 
 font_family_styles=$(get_family_styles "$font_family")
@@ -123,10 +119,9 @@ common_styles=$(echo "$STYLES" | grep -Fixf "$tmpf" -) # get common lines in pre
 rm -f "$tmpf" # delete the temporary files
 rmdir --ignore-fail-on-non-empty "$tmpd"  # delete temporary dir
 
-while IFS= read -r font_style; do
+for font_style in $common_styles; do
     FONT="$font_family:""$font_typesize=""$font_size"":style=""$font_style"
     FONTM="${RED}$font_family${END}:""$font_typesize=""${CYN}$font_size${END}"":style=${YEL}$font_style${END}"
-    st -t "ffamily [$font_style]" -f "$FONT" -e any_key.sh font_test.sh --message="$FONTM" &
+    st -t "ffamily [$font_style]" -f "$FONT" any_key.sh font_test.sh --message="$FONTM" &
     sleep 0.05
-done <<< "$common_styles"
-
+done
