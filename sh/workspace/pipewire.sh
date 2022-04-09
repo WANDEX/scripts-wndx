@@ -6,6 +6,8 @@
 # fuser -v /dev/snd/*
 # fuser -v /dev/dsp
 
+# shellcheck disable=SC1091 # does not exist (No such file or directory)
+
 # ENVD defined in /etc/environment
 [ -z "$ENVDIR" ] && ENVDIR="$ENVD"
 # source env variables if not defined at the exec time (for .xinitrc etc.)
