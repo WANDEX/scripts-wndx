@@ -241,4 +241,4 @@ if [ -n "$slice" ]; then
 fi
 
 find_week_file
-$EDITOR "$fpath"
+exec "$EDITOR" "$fpath"
