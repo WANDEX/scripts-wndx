@@ -3,8 +3,9 @@
 CSCRDIR="${CSCRDIR:-"$HOME"/.cache/cscripts}"
 CACHE="$CSCRDIR"'/rate/rate'
 
+bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $bname [OPTION...]
 GENERAL OPTIONS
     -c, --convert   Convert and get sum of currencies, separated by (+/-) each
     -e, --exchange  Change exchange currency (default: usd)
@@ -28,12 +29,12 @@ HELP
     --coins         List of supported cryptocurrencies with their full names
     --debug         Show debug messages
 EXAMPLES
-    $(basename "$0") -c 1337usd -e eur
-    $(basename "$0") 1337usd to eur
-    $(basename "$0") 1337 usd in eur
+    $bname -c 1337usd -e eur
+    $bname 1337usd to eur
+    $bname 1337 usd in eur
     - Above examples are equal and are valid.
-    $(basename "$0") -c 1BTC-10ETH+100LTC
-    $(basename "$0") -o btc,eth,bch -f '%c:%p[%H]' -d '\\n'
+    $bname -c 1BTC-10ETH+100LTC
+    $bname -o btc,eth,bch -f '%c:%p[%H]' -d '\\n'
 ")
 
 def_opt() {
