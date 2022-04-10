@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # module that gets top N cryptocurrencies by highest change of colnum, and shows
 # data for each, scrolling them automatically with N sleep time between each.
 
@@ -146,16 +146,16 @@ hide_columns() {
 
 bar() {
     CMD=($@) # not executes here! only array of raw arguments!
-    tmpd="${TMPDIR:-/tmp/}$(basename $0)" && mkdir -p "$tmpd"
+    tmpd="${TMPDIR:-/tmp/}$(basename "$0")" && mkdir -p "$tmpd"
     # OPTIONS as simple string without spaces
     sopt=$(echo "$OPTIONS" | sed "s/[ ][-]*/_/g; s/[']//g; s/_$//g; s/\///g; s/\\\//g;")
-    ufile="$tmpd/$(basename $0)$sopt"
+    ufile="$tmpd/$(basename "$0")$sopt"
     # if mtime of RATE_FORM > ufile or ufile does not exist
-    if [ ! -f "$ufile" ] || [[ $(date -r $RATE_FORM +%s) -gt $(date -r $ufile +%s) ]]; then
+    if [ ! -f "$ufile" ] || [[ $(date -r "$RATE_FORM" +%s) -gt $(date -r "$ufile" +%s) ]]; then
         MULTILINE=$(${CMD[@]}) # executes here!
         MULTILINE=$(hide_columns "$MULTILINE")
         NUM_LINES=$(echo "$MULTILINE" | wc -l)
-        LINE_ENDS=$(seq $NUM_LINES | sed "c |") # gen line ends for each line
+        LINE_ENDS=$(seq "$NUM_LINES" | sed "c |") # gen line ends for each line
         echo "$MULTILINE" > "$ufile" # paste requires file -> only one input
         # glue input to file and make all columns even width, especially for the last columns!
         GLUE_ENDS=$(echo "$LINE_ENDS" | paste -d' ' "$ufile" - | column -to' ')
@@ -163,7 +163,7 @@ bar() {
     elif [ -f "$ufile" ]; then
         ltotal=$(cat "$ufile" | wc -l) # total num of lines
         lnum=$(sed -n '/>/=' "$ufile") # get line number with > char
-        sed -i $lnum's/^>//' "$ufile"  # rm > on current line
+        sed -i "$lnum"'s/^>//' "$ufile"  # rm > on current line
         if [[ $ltotal -eq $lnum ]]; then
             nnum=1
         else
@@ -172,7 +172,7 @@ bar() {
         sed -i $nnum's/^/>/' "$ufile" # add > on next line
     else
         [[ $debug -eq 1 ]] && printf "SOMETHING WENT WRONG!"
-        notify-send -u critical "$(basename $0)" "ERROR INSIDE BAR MODE!"
+        notify-send -u critical "$(basename "$0")" "ERROR INSIDE BAR MODE!"
         exit 1
     fi
     out=$(grep "^>" "$ufile" | sed "s/^>//; s/|$//;")
@@ -197,7 +197,7 @@ term() {
         fi
         # delete/replace previous line and use $MAXLWIDTH string format
         printf "%s$TRM%s%s%""$MAXLWIDTH"'s'"$CR" "$CENSOR" "$prefix" "$ln" "$line"
-        sleep $slp
+        sleep "$slp"
     done <<< "$MULTILINE"
 }
 
@@ -210,14 +210,14 @@ main() {
     elif [[ $inf -eq 1 ]]; then
         while true; do # infinite loop!
             RS=$(${CMD[@]})
-            OLD_MTIME=$(date -r $RATE_FORM)
+            OLD_MTIME=$(date -r "$RATE_FORM")
             [[ $debug -eq 1 ]] && printf " -> fetched NEW DATA!\n"
-            sleep $slp
+            sleep "$slp"
             # loop till update of the file modification time
-            while [[ $OLD_MTIME == $(date -r $RATE_FORM) ]]; do
+            while [[ $OLD_MTIME == $(date -r "$RATE_FORM") ]]; do
                 term "$RS"
                 [[ $debug -eq 1 ]] && printf " -> next inf loop iteration"
-                sleep $slp
+                sleep "$slp"
             done
         done
     elif [[ $inf -eq 0 ]]; then
