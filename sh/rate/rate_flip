@@ -4,8 +4,9 @@
 
 RATE_FORM="$CSCRDIR"'/rate/rate_form'
 
+bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $bname [OPTION...]
 OPTIONS
     -e, --exclude       Comma separated list of the column names to exclude:
                         'c,p,H,h,m,r' - full list of awailable column names
@@ -143,10 +144,10 @@ hide_columns() {
 
 bar() {
     CMD=($@) # not executes here! only array of raw arguments!
-    tmpd="${TMPDIR:-/tmp/}$(basename "$0")" && mkdir -p "$tmpd"
+    tmpd="${TMPDIR:-/tmp/}${bname}" && mkdir -p "$tmpd"
     # OPTIONS as simple string without spaces
     sopt=$(echo "$OPTIONS" | sed "s/[ ][-]*/_/g; s/[']//g; s/_$//g; s/\///g; s/\\\//g;")
-    ufile="$tmpd/$(basename "$0")$sopt"
+    ufile="${tmpd}/${bname}${sopt}"
     # if mtime of RATE_FORM > ufile or ufile does not exist
     if [ ! -f "$ufile" ] || [[ $(date -r "$RATE_FORM" +%s) -gt $(date -r "$ufile" +%s) ]]; then
         MULTILINE=$(${CMD[@]}) # executes here!
@@ -169,7 +170,7 @@ bar() {
         sed -i $nnum's/^/>/' "$ufile" # add > on next line
     else
         [[ $debug -eq 1 ]] && printf "SOMETHING WENT WRONG!"
-        notify-send -u critical "$(basename "$0")" "ERROR INSIDE BAR MODE!"
+        notify-send -u critical "${bname}" "ERROR INSIDE BAR MODE!"
         exit 1
     fi
     out=$(grep "^>" "$ufile" | sed "s/^>//; s/|$//;")
