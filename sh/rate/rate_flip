@@ -1,8 +1,11 @@
-#!/bin/bash
-# module that gets top N cryptocurrencies by highest change of colnum, and shows
-# data for each, scrolling them automatically with N sleep time between each.
+#!/bin/sh
+# rate script that shows data on each coin,
+# scrolling them automatically with sleep time between each.
 
-RATE_FORM="$CSCRDIR"'/rate/rate_form'
+CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
+RATE_FORM="${CSCRDIR}/rate/rate_form"
+[ -f "$RATE_FORM" ] || exit 1 # silently exit if file does not exist
+
 OLDIFS="$IFS"
 NL='
 ' # New Line
@@ -19,7 +22,6 @@ OPTIONS
     -s, --slp           Sleep time between printing coin data
     --bar               Special oneshot mode without loop, but with temp file
     --inf               Execution in infinite loop
-    --debug             Debug mode -> echo INFO messages
 ")
 
 intv() {
@@ -39,7 +41,7 @@ intv() {
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=ac:de:hln:p:s:
-    LONG=ascending,bar,bot:,colnum:,debug,descending,exclude:,help,line-number,inf,number:,prefix:,slp:,top:
+    LONG=ascending,bar,bot:,colnum:,descending,exclude:,help,line-number,inf,number:,prefix:,slp:,top:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     bar=0
@@ -49,12 +51,13 @@ get_opt() {
     cln=0
     num=10
     prefix=""
+    ad="-d" # descending order by default
     slp=3 # sleep time between printing lines
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
         -a|--ascending)
-            ascending=1
+            ad="-a"
             ;;
         -c|--colnum)
             shift
@@ -62,7 +65,7 @@ get_opt() {
             colnum="$1"
             ;;
         -d|--descending)
-            descending=1
+            ad="-d"
             ;;
         -e|--exclude)
             shift
@@ -70,8 +73,7 @@ get_opt() {
             ;;
         -h|--help)
             echo "$USAGE"
-            rate_sort --help | sed "s/OPTIONS/RATE_SORT OPTIONS/;
-                                    /Usage:/d; /--help/d; /--debug/d;"
+            rate_sort --help | sed "s/OPTIONS/rate_sort OPTIONS/; /Usage:/d; /--help/d;"
             exit 0
             ;;
         -l|--line-number)
@@ -100,20 +102,25 @@ get_opt() {
             ;;
         --bot)
             shift
-            bot=(--bot "$1")
-            ;;
-        --debug)
-            debug=1
+            bot="$1"
             ;;
         --inf)
             inf=1
             ;;
         --top)
             shift
-            top=(--top "$1")
+            top="$1"
             ;;
         --)
             shift
+            # check/set defaults after getting all options
+            if [ -z "$colnum" ]; then
+                echo "the column number is required for sorting by ... exit."
+                exit 1
+            fi
+            # if top/bot not set explicitly -> set to the num
+            [ -z "$top" ] && top="$num"
+            [ -z "$bot" ] && bot="$num"
             break
             ;;
         esac
@@ -123,30 +130,13 @@ get_opt() {
 
 get_opt "$@"
 
-[ ! -f "$RATE_FORM" ] && exit 1 # silently exit if file does not exist
-
-sort_list() {
-    if [ -z "$colnum" ]; then
-        echo "the column number is required for sorting by ... exit."
-        exit 1
-    fi
-    if [ "$ascending" ]; then
-        ad=(-a)
-    elif [ "$descending" ]; then
-        ad=(-d)
-    else
-        # descending order by default
-        ad=(-d)
-    fi
+rate_sort_cmd() {
+    rate_sort -c "$colnum" -n "$num" "$ad" --top "$top" --bot "$bot"
 }
 
 hide_columns() {
     # hide unspecified columns
     echo "$1" | column -t -dN "$def_columns" -H "$del_columns"
-}
-
-rate_sort_cmd() {
-    rate_sort -c "$colnum" -n "$num" ${top[@]} ${bot[@]} ${ad[@]}
 }
 
 bar() {
@@ -178,7 +168,6 @@ bar() {
         fi
         sed -i $nnum's/^/>/' "$ufile" # add > on next line
     else
-        [ "$debug" -eq 1 ] && printf "SOMETHING WENT WRONG!"
         notify-send -u critical "${bname}" "ERROR INSIDE BAR MODE!"
         exit 1
     fi
@@ -206,7 +195,6 @@ term() {
 }
 
 main() {
-    sort_list
     if [ "$bar" -eq 1 ]; then
         bar
     elif [ "$inf" -eq 0 ]; then
@@ -218,4 +206,4 @@ main() {
     fi
 }
 
-main "$@"
+main
