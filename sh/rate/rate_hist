@@ -3,14 +3,7 @@
 
 XDGCHCS="${XDG_CACHE_HOME:-"$HOME/.cache"}/cscripts"
 CACHEDIR="${CSCRDIR:-$XDGCHCS}/rate_hist"
-[ ! -d "$CACHEDIR" ] && mkdir -p "$CACHEDIR"
-
-if [ -t 0 ]; then
-    fwid=$(xdotool getactivewindow) # get id of the active/focused terminal emulator window
-    # FIXME right now is unused, as currently my st with alpha patch can't embed dmenu into it's window
-    [ -n "$fwid" ] && fwidarr=( -w "$fwid" )
-    # TODO create my own build of st with fresh alpha patch and test 'dmenu "${fwidarr[@]}"'
-fi
+[ -d "$CACHEDIR" ] || mkdir -p "$CACHEDIR"
 
 USAGE=$(printf "%s" "\
 Usage: $(basename "$0") [OPTION...]
@@ -108,6 +101,8 @@ questions() {
 
 questions
 
+readp() { printf "%s" "$1" && read -r "$2" ;}
+
 ask_buy_or_sell() {
     q_operation="Buy or Sell operation to use? (B/s): "
     if [ -z "$operation" ]; then
@@ -119,11 +114,11 @@ ask_buy_or_sell() {
             esac
         else
             while true; do
-                read -r -n 1 -p "$q_operation" operation
+                readp "$q_operation" operation
                 case "$operation" in
                     [Bb]) operation=buy;  break ;;
                     [Ss]) operation=sell; break ;;
-                    *) printf "\n%s\n" "I don't get it." ;;
+                    *) printf "%s\n\n" "I don't get it." ;;
                 esac
             done
         fi
@@ -199,28 +194,28 @@ dmenu_ask_input_data() {
 }
 
 term_ask_input_data() {
-    [ -z "$coin"     ] && read -r -p "$qcoin"     coin
-    [ -z "$price"    ] && read -r -p "$qprice"    price
-    [ -z "$currency" ] && read -r -p "$qcurrency" currency
-    [ -z "$filled"   ] && read -r -p "$qfilled"   filled
-    [ -z "$fee"      ] && read -r -p "$qfee"      fee
-    [ -z "$total"    ] && read -r -p "$qtotal"    total
-    [ -z "$date"     ] && read -r -p "$qdate"     date
+    [ -z "$coin"     ] && readp "$qcoin"     coin
+    [ -z "$price"    ] && readp "$qprice"    price
+    [ -z "$currency" ] && readp "$qcurrency" currency
+    [ -z "$filled"   ] && readp "$qfilled"   filled
+    [ -z "$fee"      ] && readp "$qfee"      fee
+    [ -z "$total"    ] && readp "$qtotal"    total
+    [ -z "$date"     ] && readp "$qdate"     date
 }
 
 update_json_variables() {
-read -rd '' RAWJSON <<- EOF
+RAWJSON=$(printf "%s" "\
 {
-    "operation": "$operation",
-    "coin"     : "$coin",
-    "price"    : "$price",
-    "currency" : "$currency",
-    "filled"   : "$filled",
-    "fee"      : "$fee",
-    "total"    : "$total",
-    "date"     : "$date"
+    \"operation\": \"$operation\",
+    \"coin\"     : \"$coin\",
+    \"price\"    : \"$price\",
+    \"currency\" : \"$currency\",
+    \"filled\"   : \"$filled\",
+    \"fee\"      : \"$fee\",
+    \"total\"    : \"$total\",
+    \"date\"     : \"$date\"
 }
-EOF
+")
 }
 
 save_as_json() {
@@ -253,10 +248,12 @@ if [ $interactive -eq 1 ]; then
         term_ask_input_data
         update_json_variables
         data_recheck
-        read -r -n 1 -p "All input is right? (Y/n): " confirm
+        readp "All input is right? (Y/n): " confirm
+        confirm="$(echo "$confirm" | awk '{print tolower($0)}')" # convert to lowercase
         case "$confirm" in
-            [YyEeSs]) printf "\n\n"  ;; # insert new lines after confirm prompt
-            [NnOo])   echo && exit 1 ;;
+            # insert new line after confirm prompt
+            [yes]|yes) echo ;;
+            *) echo && exit 1 ;;
         esac
         save_as_json
     fi
