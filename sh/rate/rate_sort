@@ -3,6 +3,7 @@
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
 RATE_FORM="${CSCRDIR}/rate/rate_form"
+[ -f "$RATE_FORM" ] || exit 1 # silently exit if file does not exist
 
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
@@ -41,11 +42,12 @@ get_opt() {
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     num=10
+    sr="r" # descending order by default
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
         -a|--ascending)
-            ascending=1
+            sr=""
             ;;
         -c|--colnum)
             shift
@@ -53,7 +55,7 @@ get_opt() {
             colnum="$1"
             ;;
         -d|--descending)
-            descending=1
+            sr="r"
             ;;
         -h|--help)
             echo "$USAGE"
@@ -79,6 +81,11 @@ get_opt() {
             ;;
         --)
             shift
+            # check/set defaults after getting all options
+            if [ -z "$colnum" ]; then
+                echo "the column number is required for sorting by ... exit."
+                exit 1
+            fi
             break
             ;;
         esac
@@ -87,8 +94,6 @@ get_opt() {
 }
 
 get_opt "$@"
-
-[ ! -f "$RATE_FORM" ] && exit 1 # silently exit if file does not exist
 
 sort_cmd() {
     tmpd="${TMPDIR:-/tmp/}${bname}" && mkdir -p "$tmpd"
@@ -112,40 +117,12 @@ sort_cmd() {
         6) sort "-k6n${sr}" "$tmpf";;
         *) echo "there is no such column with number:$colnum exit." && exit 1;;
     esac
-    rm -f "$tmpf" # delete the temporary file, as it's no longer needed
-}
-
-ascend() {
-    sr=""
-    data="$(sort_cmd)"
-    echo "$data"
-}
-
-descend() {
-    sr="r"
-    data="$(sort_cmd)"
-    echo "$data"
-}
-
-sort_list() {
-    if [ -z "$colnum" ]; then
-        echo "the column number is required for sorting by ... exit."
-        exit 1
-    fi
-    # check if variables defined
-    if [ "$ascending" ]; then
-        ascend
-    elif [ "$descending" ]; then
-        descend
-    else
-        # descending order by default
-        descend
-    fi
+    rm -f "$tmpf" # delete the temporary file, as it is no longer needed
 }
 
 main() {
-    DATA="$(sort_list)"
+    DATA="$(sort_cmd)"
     echo "$DATA" | head -n "$num"
 }
 
-main "$@"
+main
