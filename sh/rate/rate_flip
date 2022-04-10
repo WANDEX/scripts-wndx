@@ -3,6 +3,9 @@
 # data for each, scrolling them automatically with N sleep time between each.
 
 RATE_FORM="$CSCRDIR"'/rate/rate_form'
+OLDIFS="$IFS"
+NL='
+' # New Line
 
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
@@ -142,8 +145,11 @@ hide_columns() {
     echo "$1" | column -t -dN "$def_columns" -H "$del_columns"
 }
 
+rate_sort_cmd() {
+    rate_sort -c "$colnum" -n "$num" ${top[@]} ${bot[@]} ${ad[@]}
+}
+
 bar() {
-    CMD=($@) # not executes here! only array of raw arguments!
     tmpd="${TMPDIR:-/tmp/}${bname}" && mkdir -p "$tmpd"
     # OPTIONS as simple string without spaces
     sopt=$(echo "$OPTIONS" | sed "s/[ ][-]*/_/g; s/[']//g; s/_$//g; s/\///g; s/\\\//g;")
@@ -152,7 +158,7 @@ bar() {
     dru="$(date +%s --utc -r "$ufile")"
     # if mtime of RATE_FORM > ufile or ufile does not exist
     if [ ! -f "$ufile" ] || [ "$drf" -gt "$dru" ]; then
-        MULTILINE=$(${CMD[@]}) # executes here!
+        MULTILINE=$(rate_sort_cmd)
         MULTILINE=$(hide_columns "$MULTILINE")
         NUM_LINES=$(echo "$MULTILINE" | wc -l)
         LINE_ENDS=$(seq "$NUM_LINES" | sed "c |") # gen line ends for each line
@@ -185,45 +191,30 @@ bar() {
 }
 
 term() {
-    MULTILINE="$1"
+    MULTILINE=$(rate_sort_cmd)
     MULTILINE=$(hide_columns "$MULTILINE")
-    MAXLWIDTH=$(echo "$MULTILINE" | wc --max-line-length)
-    CENSOR=$(printf %"$MAXLWIDTH"s | tr " " "X") # print X till max line length
-    TRM="\r\033[K"
-    CR=""
-    while read line; do # line by line loop
+    IFS="$NL" # set Internal Field Separator to New Line
+    for line in $MULTILINE; do
         if [ "$cln" -eq 1 ]; then
             ln=$(echo "$MULTILINE" | sed -n "/$line/=")
             ln=$(printf "%02d)" "$ln")
         fi
-        # delete/replace previous line and use $MAXLWIDTH string format
-        printf "%s${TRM}%s%s%${MAXLWIDTH}s${CR}" "$CENSOR" "$prefix" "$ln" "$line"
+        printf "\r%s%s%s" "$prefix" "$ln" "$line"
         sleep "$slp"
-    done <<< "$MULTILINE"
+    done
+    IFS="$OLDIFS" # restore
 }
 
 main() {
     sort_list
-    # not executes here! only array of raw arguments!
-    CMD=(rate_sort -c "$colnum" -n "$num" ${top[@]} ${bot[@]} ${ad[@]})
     if [ "$bar" -eq 1 ]; then
-        bar "${CMD[@]}"
-    elif [ "$inf" -eq 1 ]; then
-        while true; do # infinite loop!
-            RS=$(${CMD[@]})
-            OLD_MTIME=$(date -r "$RATE_FORM")
-            [ "$debug" -eq 1 ] && printf " -> fetched NEW DATA!\n"
-            sleep "$slp"
-            # loop till update of the file modification time
-            while [ "$OLD_MTIME" == "$(date -r "$RATE_FORM")" ]; do
-                term "$RS"
-                [ "$debug" -eq 1 ] && printf " -> next inf loop iteration"
-                sleep "$slp"
-            done
-        done
+        bar
     elif [ "$inf" -eq 0 ]; then
-        RS=$(${CMD[@]})
-        term "$RS"
+        term
+    elif [ "$inf" -eq 1 ]; then
+        while true; do
+            term
+        done
     fi
 }
 
