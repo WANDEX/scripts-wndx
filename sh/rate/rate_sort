@@ -20,6 +20,20 @@ EXAMPLE
     $bname -a -c6 -n20 --top 20 --bot 10
 ")
 
+intv() {
+    # exit if $1 is not a valid int value
+    case "$1" in
+        0*)
+            printf "(%s)\n%s\n" "$1" "^ unsupported number! exit."
+            exit 10
+        ;;
+        ''|*[!0-9]*)
+            printf "(%s)\n%s\n" "$1" "^ is not a valid number of int! exit."
+            exit 11
+        ;;
+    esac
+}
+
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=ac:dhn:
@@ -35,17 +49,8 @@ get_opt() {
             ;;
         -c|--colnum)
             shift
-            case $1 in
-                0*)
-                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
-                    exit 1
-                    ;;
-                ''|*[!0-9]*)
-                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
-                    exit 1
-                    ;;
-                *) colnum=$1 ;;
-            esac
+            intv "$1"
+            colnum="$1"
             ;;
         -d|--descending)
             descending=1
@@ -56,17 +61,8 @@ get_opt() {
             ;;
         -n|--number)
             shift
-            case $1 in
-                0*)
-                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
-                    exit 1
-                    ;;
-                ''|*[!0-9]*)
-                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
-                    exit 1
-                    ;;
-                *) num=$1 ;;
-            esac
+            intv "$1"
+            num="$1"
             if [ -f "$RATE_FORM" ]; then
                 # shellcheck disable=SC2002 # this is not useles cat!
                 num_total=$(cat "$RATE_FORM" | wc -l)
