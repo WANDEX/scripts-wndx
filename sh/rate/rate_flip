@@ -97,7 +97,7 @@ get_opt() {
             ;;
         --bot)
             shift
-            bot=(--bot $1)
+            bot=(--bot "$1")
             ;;
         --debug)
             debug=1
@@ -107,7 +107,7 @@ get_opt() {
             ;;
         --top)
             shift
-            top=(--top $1)
+            top=(--top "$1")
             ;;
         --)
             shift
@@ -127,9 +127,9 @@ sort_list() {
         echo "the column number is required for sorting by ... exit."
         exit 1
     fi
-    if [[ $ascending -eq 1 ]]; then
+    if [ "$ascending" ]; then
         ad=(-a)
-    elif [[ $descending -eq 1 ]]; then
+    elif [ "$descending" ]; then
         ad=(-d)
     else
         # descending order by default
@@ -148,8 +148,10 @@ bar() {
     # OPTIONS as simple string without spaces
     sopt=$(echo "$OPTIONS" | sed "s/[ ][-]*/_/g; s/[']//g; s/_$//g; s/\///g; s/\\\//g;")
     ufile="${tmpd}/${bname}${sopt}"
+    drf="$(date +%s --utc -r "$RATE_FORM")"
+    dru="$(date +%s --utc -r "$ufile")"
     # if mtime of RATE_FORM > ufile or ufile does not exist
-    if [ ! -f "$ufile" ] || [[ $(date -r "$RATE_FORM" +%s) -gt $(date -r "$ufile" +%s) ]]; then
+    if [ ! -f "$ufile" ] || [ "$drf" -gt "$dru" ]; then
         MULTILINE=$(${CMD[@]}) # executes here!
         MULTILINE=$(hide_columns "$MULTILINE")
         NUM_LINES=$(echo "$MULTILINE" | wc -l)
@@ -159,17 +161,18 @@ bar() {
         GLUE_ENDS=$(echo "$LINE_ENDS" | paste -d' ' "$ufile" - | column -to' ')
         echo "$GLUE_ENDS" | sed '1s/^/>/' > "$ufile" # insert at beginning of first line
     elif [ -f "$ufile" ]; then
+        # shellcheck disable=SC2002 # this is not useles cat!
         ltotal=$(cat "$ufile" | wc -l) # total num of lines
         lnum=$(sed -n '/>/=' "$ufile") # get line number with > char
         sed -i "$lnum"'s/^>//' "$ufile"  # rm > on current line
-        if [[ $ltotal -eq $lnum ]]; then
+        if [ "$ltotal" -eq "$lnum" ]; then
             nnum=1
         else
-            nnum=$(($lnum+1))
+            nnum=$((lnum+1))
         fi
         sed -i $nnum's/^/>/' "$ufile" # add > on next line
     else
-        [[ $debug -eq 1 ]] && printf "SOMETHING WENT WRONG!"
+        [ "$debug" -eq 1 ] && printf "SOMETHING WENT WRONG!"
         notify-send -u critical "${bname}" "ERROR INSIDE BAR MODE!"
         exit 1
     fi
@@ -194,7 +197,7 @@ term() {
             ln=$(printf "%02d)" "$ln")
         fi
         # delete/replace previous line and use $MAXLWIDTH string format
-        printf "%s$TRM%s%s%""$MAXLWIDTH"'s'"$CR" "$CENSOR" "$prefix" "$ln" "$line"
+        printf "%s${TRM}%s%s%${MAXLWIDTH}s${CR}" "$CENSOR" "$prefix" "$ln" "$line"
         sleep "$slp"
     done <<< "$MULTILINE"
 }
@@ -202,27 +205,26 @@ term() {
 main() {
     sort_list
     # not executes here! only array of raw arguments!
-    CMD=(rate_sort -c $colnum -n $num ${top[@]} ${bot[@]} ${ad[@]})
-    if [[ $bar -eq 1 ]]; then
+    CMD=(rate_sort -c "$colnum" -n "$num" ${top[@]} ${bot[@]} ${ad[@]})
+    if [ "$bar" -eq 1 ]; then
         bar "${CMD[@]}"
-    elif [[ $inf -eq 1 ]]; then
+    elif [ "$inf" -eq 1 ]; then
         while true; do # infinite loop!
             RS=$(${CMD[@]})
             OLD_MTIME=$(date -r "$RATE_FORM")
-            [[ $debug -eq 1 ]] && printf " -> fetched NEW DATA!\n"
+            [ "$debug" -eq 1 ] && printf " -> fetched NEW DATA!\n"
             sleep "$slp"
             # loop till update of the file modification time
-            while [[ $OLD_MTIME == $(date -r "$RATE_FORM") ]]; do
+            while [ "$OLD_MTIME" == "$(date -r "$RATE_FORM")" ]; do
                 term "$RS"
-                [[ $debug -eq 1 ]] && printf " -> next inf loop iteration"
+                [ "$debug" -eq 1 ] && printf " -> next inf loop iteration"
                 sleep "$slp"
             done
         done
-    elif [[ $inf -eq 0 ]]; then
+    elif [ "$inf" -eq 0 ]; then
         RS=$(${CMD[@]})
         term "$RS"
     fi
 }
 
 main "$@"
-
