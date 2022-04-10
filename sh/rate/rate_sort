@@ -1,11 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 # rate script to get sorted by column N items length output
 
-CSCRDIR="${CSCRDIR:-"$HOME"/.cache/cscripts}"
-RATE_FORM="$CSCRDIR"'/rate/rate_form'
+CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
+RATE_FORM="${CSCRDIR}/rate/rate_form"
 
+bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $bname [OPTION...]
 OPTIONS
     -a, --ascending     Sort list in a ascending manner
     -c, --colnum        Sort by: 1-name 2-price 3-c24h 4-c01h 5-mcap 6-rank
@@ -17,7 +18,7 @@ OPTIONS
     --top               Get head -n N before applying sort
 EXAMPLE
     # make sort in range of ranks 11-20 (get 10 coins total)
-    $(basename "$0") -a -c6 -n20 --top 20 --bot 10
+    $bname -a -c6 -n20 --top 20 --bot 10
 ")
 
 get_opt() {
@@ -37,11 +38,11 @@ get_opt() {
             shift
             case $1 in
                 0*)
-                    printf "$1\n^ unsupported number! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
                     exit 1
                     ;;
                 ''|*[!0-9]*)
-                    printf "$1\n^ IS NOT A NUMBER OF INT! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
                     exit 1
                     ;;
                 *) colnum=$1 ;;
@@ -58,16 +59,17 @@ get_opt() {
             shift
             case $1 in
                 0*)
-                    printf "$1\n^ unsupported number! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
                     exit 1
                     ;;
                 ''|*[!0-9]*)
-                    printf "$1\n^ IS NOT A NUMBER OF INT! exit.\n"
+                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
                     exit 1
                     ;;
                 *) num=$1 ;;
             esac
             if [ -f "$RATE_FORM" ]; then
+                # shellcheck disable=SC2002 # this is not useles cat!
                 num_total=$(cat "$RATE_FORM" | wc -l)
                 [ "$num" -gt "$num_total" ] && num=$num_total
             fi
@@ -97,25 +99,26 @@ get_opt "$@"
 [ ! -f "$RATE_FORM" ] && exit 1 # silently exit if file does not exist
 
 sort_cmd() {
-    tmpd="${TMPDIR:-/tmp/}$(basename $0)" && mkdir -p "$tmpd"
+    tmpd="${TMPDIR:-/tmp/}${bname}" && mkdir -p "$tmpd"
     tmpf=$(mktemp "$tmpd/XXXX")
     # check if variables defined
     if [[ $top && $bot ]]; then
-        cat "$RATE_FORM" | head -n $top | tail -n $bot > "$tmpf"
+        head -n "$top" "$RATE_FORM" | tail -n "$bot" > "$tmpf"
     elif [[ $top ]]; then
-        cat "$RATE_FORM" | head -n $top > "$tmpf"
+        head -n "$top" "$RATE_FORM" > "$tmpf"
     elif [[ $bot ]]; then
-        cat "$RATE_FORM" | tail -n $bot > "$tmpf"
+        tail -n "$bot" "$RATE_FORM" > "$tmpf"
     else
         cat "$RATE_FORM" > "$tmpf"
     fi
+    # shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements
     case "$colnum" in
-        1) sort -k1${sr[@]} ${debug[@]} "$tmpf";;
-        2) sort -k2n${sr[@]} ${debug[@]} "$tmpf";;
-        3) sort -k3bg${sr[@]} -k4bg${sr[@]} ${debug[@]} "$tmpf";;
-        4) sort -k4bg${sr[@]} -k3bg${sr[@]} ${debug[@]} "$tmpf";;
-        5) sort -k6n${sr[@]} ${debug[@]} "$tmpf";;
-        6) sort -k6n${sr[@]} ${debug[@]} "$tmpf";;
+        1) sort -k1"${sr}" ${debug[@]} "$tmpf";;
+        2) sort -k2n"${sr}" ${debug[@]} "$tmpf";;
+        3) sort -k3bg"${sr}" -k4bg"${sr}" ${debug[@]} "$tmpf";;
+        4) sort -k4bg"${sr}" -k3bg"${sr}" ${debug[@]} "$tmpf";;
+        5) sort -k6n"${sr}" ${debug[@]} "$tmpf";;
+        6) sort -k6n"${sr}" ${debug[@]} "$tmpf";;
         *) echo "there is no such column with number:$colnum exit." && exit 1;;
     esac
     rm -f "$tmpf" # delete the temporary file, as it's no longer needed
@@ -127,7 +130,8 @@ ascend() {
 }
 
 descend() {
-    sr=(r)
+    # sr=(r)
+    sr="r"
     data=$(sort_cmd)
     echo "$data"
 }
@@ -149,8 +153,7 @@ sort_list() {
 
 main() {
     DATA=$(sort_list)
-    echo "$DATA" | head -n $num
+    echo "$DATA" | head -n "$num"
 }
 
 main "$@"
-
