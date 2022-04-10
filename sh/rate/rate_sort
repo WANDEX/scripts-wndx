@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # rate script to get sorted by column N items length output
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
@@ -14,7 +14,6 @@ OPTIONS
     -h, --help          Display help
     -n, --number        Number of coins in list
     --bot               Get tail -n N before applying sort
-    --debug             Debug of sort command
     --top               Get head -n N before applying sort
 EXAMPLE
     # make sort in range of ranks 11-20 (get 10 coins total)
@@ -24,7 +23,7 @@ EXAMPLE
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=ac:dhn:
-    LONG=ascending,bot:,colnum:,descending,debug,help,number:,top:
+    LONG=ascending,bot:,colnum:,descending,help,number:,top:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     num=10
@@ -78,9 +77,6 @@ get_opt() {
             shift
             bot=$1
             ;;
-        --debug)
-            debug=( --debug )
-            ;;
         --top)
             shift
             top=$1
@@ -102,37 +98,36 @@ sort_cmd() {
     tmpd="${TMPDIR:-/tmp/}${bname}" && mkdir -p "$tmpd"
     tmpf=$(mktemp "$tmpd/XXXX")
     # check if variables defined
-    if [[ $top && $bot ]]; then
+    if [ "$top" ] && [ "$bot" ]; then
         head -n "$top" "$RATE_FORM" | tail -n "$bot" > "$tmpf"
-    elif [[ $top ]]; then
+    elif [ "$top" ]; then
         head -n "$top" "$RATE_FORM" > "$tmpf"
-    elif [[ $bot ]]; then
+    elif [ "$bot" ]; then
         tail -n "$bot" "$RATE_FORM" > "$tmpf"
     else
         cat "$RATE_FORM" > "$tmpf"
     fi
-    # shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements
     case "$colnum" in
-        1) sort -k1"${sr}" ${debug[@]} "$tmpf";;
-        2) sort -k2n"${sr}" ${debug[@]} "$tmpf";;
-        3) sort -k3bg"${sr}" -k4bg"${sr}" ${debug[@]} "$tmpf";;
-        4) sort -k4bg"${sr}" -k3bg"${sr}" ${debug[@]} "$tmpf";;
-        5) sort -k6n"${sr}" ${debug[@]} "$tmpf";;
-        6) sort -k6n"${sr}" ${debug[@]} "$tmpf";;
+        1) sort "-k1${sr}" "$tmpf";;
+        2) sort "-k2n${sr}" "$tmpf";;
+        3) sort "-k3bg${sr}" "-k4bg${sr}" "$tmpf";;
+        4) sort "-k4bg${sr}" "-k3bg${sr}" "$tmpf";;
+        5) sort "-k6n${sr}" "$tmpf";;
+        6) sort "-k6n${sr}" "$tmpf";;
         *) echo "there is no such column with number:$colnum exit." && exit 1;;
     esac
     rm -f "$tmpf" # delete the temporary file, as it's no longer needed
 }
 
 ascend() {
-    data=$(sort_cmd)
+    sr=""
+    data="$(sort_cmd)"
     echo "$data"
 }
 
 descend() {
-    # sr=(r)
     sr="r"
-    data=$(sort_cmd)
+    data="$(sort_cmd)"
     echo "$data"
 }
 
@@ -141,9 +136,10 @@ sort_list() {
         echo "the column number is required for sorting by ... exit."
         exit 1
     fi
-    if [[ $ascending -eq 1 ]]; then
+    # check if variables defined
+    if [ "$ascending" ]; then
         ascend
-    elif [[ $descending -eq 1 ]]; then
+    elif [ "$descending" ]; then
         descend
     else
         # descending order by default
@@ -152,7 +148,7 @@ sort_list() {
 }
 
 main() {
-    DATA=$(sort_list)
+    DATA="$(sort_list)"
     echo "$DATA" | head -n "$num"
 }
 
