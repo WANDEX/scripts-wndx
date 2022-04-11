@@ -1,7 +1,11 @@
 #!/bin/bash
 # get average crypto exchange rate for last ~5 min
-CSCRDIR="${CSCRDIR:-"$HOME"/.cache/cscripts}"
-CACHE="$CSCRDIR"'/rate/rate'
+CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
+CACHE="${CSCRDIR}/rate/rate"
+
+OLDIFS="$IFS"
+NL='
+' # New Line
 
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
@@ -37,11 +41,32 @@ EXAMPLES
     $bname -o btc,eth,bch -f '%c:%p[%H]' -d '\\n'
 ")
 
-def_opt() {
+at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
+
+intv() {
+    # exit if $1 is not a valid int value
+    case "$1" in
+        0*)
+            printf "(%s)\n%s\n" "$1" "^ unsupported number! exit."
+            exit 10
+        ;;
+        ''|*[!0-9]*)
+            printf "(%s)\n%s\n" "$1" "^ is not a valid number of int! exit."
+            exit 11
+        ;;
+    esac
+}
+
+get_opt() {
+    # Parse and read OPTIONS command-line options
+    SHORT=c:Cd:e:kf:hHn:o:t
+    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d
+    OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
+    # PLACE FOR OPTION DEFAULTS
     mplen=3 # min price string length as int value
     printf_h="%2s"
     printf_m="%3.0f"
-    printf_p='%.'"$mplen"'g'
+    printf_p="%.${mplen}g"
     printf_r="%2.0f"
     exchange="usd"
     format="%c:%p"
@@ -51,13 +76,6 @@ def_opt() {
     color=0 # color mode 1=on
     debug=0 # debug mode 1=on
     s2d=0
-}
-
-get_opt() {
-    # Parse and read OPTIONS command-line options
-    SHORT=c:Cd:e:kf:hHn:o:t
-    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d
-    OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
@@ -94,18 +112,9 @@ get_opt() {
             ;;
         -n|--number)
             shift
-            case $1 in
-                0*)
-                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
-                    exit 1
-                    ;;
-                ''|*[!0-9]*)
-                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
-                    exit 1
-                    ;;
-                *) n=$1 ;;
-            esac
-            [[ $n -gt $n_hardcoded_max ]] && n="$n_hardcoded_max"
+            intv "$1"
+            n="$1"
+            [ "$n" -gt "$n_hardcoded_max" ] && n="$n_hardcoded_max"
             ;;
         -o|--output)
             shift
@@ -135,17 +144,8 @@ get_opt() {
             ;;
         --Mp)
             shift
-            case $1 in
-                0*)
-                    printf "%s\n%s\n" "$1" "^ unsupported number! exit."
-                    exit 1
-                    ;;
-                ''|*[!0-9]*)
-                    printf "%s\n%s\n" "$1" "^ IS NOT A NUMBER OF INT! exit."
-                    exit 1
-                    ;;
-                *) mplen="$1" ;;
-            esac
+            intv "$1"
+            mplen="$1"
             ;;
         --coins)
             special=":coins"
@@ -169,7 +169,7 @@ get_opt() {
 }
 
 parse_in() {
-    def_opt # PLACE FOR OPTION DEFAULTS
+    get_opt "$@"
     argarray=("$@")
     argcount="${#argarray[@]}"
     stringarray="${argarray[*]}"
@@ -189,8 +189,6 @@ parse_in() {
             echo "I don't get it. exit"
             exit 1
         fi
-    else
-        get_opt "$@"
     fi
 }
 
@@ -349,14 +347,14 @@ get_date() {
         difference=$(echo "$dateadd-($(date +%s --utc))+1" | bc)
         if [[ $difference -gt 0 ]]; then
             if [[ $difference -lt 10 ]]; then
-                [ $debug -eq 1 ] && notify-send "rate - sleep to sync:" "$difference sec"
+                [ "$debug" -eq 1 ] && notify-send "rate - sleep to sync:" "$difference sec"
                 sleep "$difference"
             elif [[ $difference -lt 299 ]]; then
-                [ $debug -eq 1 ] && notify-send "rate - sync difference:" "$difference sec"
+                [ "$debug" -eq 1 ] && notify-send "rate - sync difference:" "$difference sec"
             fi
         fi
     else
-        [ $debug -eq 1 ] && notify-send "[rate]" "$CACHE\nDoes not exist, or not regular file -> exit."
+        [ "$debug" -eq 1 ] && notify-send "[rate]" "$CACHE\nDoes not exist, or not regular file -> exit."
         exit 1
     fi
 }
@@ -385,10 +383,10 @@ upd_cache() {
         if [[ $(echo "$TABLE" | tail -n 1) =~ [0-9]{4}(.[0-9][0-9]){5}.[0-9]+.UTC ]]; then
             echo "$TABLE" > "$CACHE"
         else
-            [ $debug -eq 1 ] && notify-send "last line of TABLE not date UTC"
+            [ "$debug" -eq 1 ] && notify-send "last line of TABLE not date UTC"
         fi
         get_date
-        [ $debug -eq 1 ] && notify-send "rate srv sync:" "$(date --date=@"$date" +%R):last $(date +%R):now"
+        [ "$debug" -eq 1 ] && notify-send "rate srv sync:" "$(date --date=@"$date" +%R):last $(date +%R):now"
     fi
 }
 
