@@ -2,6 +2,8 @@
 # get average crypto exchange rate for last ~5 min
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
 CACHE="${CSCRDIR}/rate/rate"
+RATE_PRE="${CSCRDIR}/rate/rate_pre"
+RATE_POST="${CSCRDIR}/rate/rate_post"
 
 OLDIFS="$IFS"
 NL='
@@ -288,6 +290,49 @@ colored_change_emojis() {
             ch01h=$(echo "$ch01h" | sed "s/-/$dwL/g")
         fi
     fi
+}
+
+rate_process() {
+    # clean & hide | bars as columns
+    # rank,coin,price,ch24h,ch01h,mcap,spark
+    form_pre=$(tail -n +13 "$CACHE" | head -n -2 | sed '/├─/d' | column -t -H 1,3,5,7,9,11,13,15)
+    echo "$form_pre" > "$RATE_PRE"
+    # make everything inside one awk
+    form_post=$(awk '
+    {
+        printf "%-10s %-15s", $1, $2;
+        printf "\t";
+
+        # len of price value in decimal format;
+        dlen=length(sprintf("%d", $3));
+        if (dlen > 2)
+            printf "%d", $3;
+        else if (dlen == 2)
+            printf "%.2f", $3;
+        else
+            if ($3 <= 0.0001)
+                printf "%.1e", $3;
+            else
+                printf "%.3f", $3;
+        printf "\t\t\t";
+
+        # add + to change % and format as decimal without % sign
+        printf "%+d\t\t%+d", $4, $5;
+        printf "\t\t";
+
+        # only decimal of mcap + letter(BM)
+        if (match($6, "B$"))
+            printf "%dB", $6;
+        else if (match($6, "M$"))
+            printf "%dM", $6;
+        else
+            printf "%d", $6;
+        printf "\t\t";
+
+        printf "%-15s", $7;
+        printf "\n";
+    }' "$RATE_PRE" | column -t)
+    echo "$form_post" > "$RATE_POST"
 }
 
 # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
