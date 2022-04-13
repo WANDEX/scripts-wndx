@@ -196,11 +196,11 @@ parse_in() {
 
 get_defaults() {
     # essential defaults in order to work
-    if [[ $color -eq 1 ]]; then
-        num=${n:-10} # to get n coins or 10 default
+    if [ "$color" -eq 1 ]; then
+        num="${n:-10}" # to get n coins or 10 default
         T='' # allow colored output
     else
-        num=$n_hardcoded_max # to get all coins from table to parse
+        num="$n_hardcoded_max" # to get all coins from table to parse
         T='T' # text only, no ANSI sequences
     fi
 }
@@ -209,7 +209,7 @@ get_defaults() {
 colored_change_emojis() {
     ch01h="$1"
     ch24h="$2"
-    if [ "$S2D" ] && [[ $s2d -eq 1 ]]; then
+    if [ "$S2D" ] && [ "$s2d" -eq 1 ]; then
         c_g="$(s2d -c green)"
         c_r="$(s2d -c red)"
         u_w='▲ ' && upW="^c${c_g}^${u_w}^d^"
@@ -438,16 +438,16 @@ upd_cache() {
 main() {
     parse_in "$@"
     get_defaults
-    BASE='https://'"$exchange"'.rate.sx/'"$special"
-    URL="$BASE?qF$T&n=$num"
-    [[ $test ]] && echo "$URL" && exit 0
+    BASE="https://${exchange}.rate.sx/${special}"
+    URL="${BASE}?qF${T}&n=${num}"
+    [ "$test" ] && echo "$URL" && exit 0
     get_date
     upd_cache "$URL"
 
     # main
-    if [[ $output ]]; then
+    if [ "$output" ]; then
         get_form_out "$TABLE"
-    elif [[ $n && $color -eq 0 ]]; then
+    elif [ "$n" ] && [ "$color" -eq 0 ]; then
         get_n_lines "$TABLE"
     else
         do_curl "$URL"
