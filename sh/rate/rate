@@ -356,7 +356,7 @@ get_form_out() {
         price=$(echo "$foundline" | awk '{print $3}')
         int_price=$(echo "$price" | sed 's/[.].*$//')
         # if length <= min_length -> apply printf format
-        if [[ ${#int_price} -le $mplen ]]; then
+        if [ "${#int_price}" -le "$mplen" ]; then
             price=$(echo "$price" | awk '{printf "'"$printf_p"'", $1}')
         else
             price=$(echo "$price" | sed 's/[.].*$//')
@@ -374,7 +374,7 @@ get_form_out() {
         ch24h=$(printf "$printf_h" "$ch24h")
         ch01h=$(printf "$printf_h" "$ch01h")
 
-        if [[ $Ec -eq 1 ]] || [[ $s2d -eq 1 ]]; then
+        if [ "$Ec" -eq 1 ] || [ "$s2d" -eq 1 ]; then
             colored_change_emojis "$ch01h" "$ch24h"
         fi
 
@@ -396,13 +396,13 @@ get_date() {
         # clean date from possible ANSI sequences of colored cache text, +remove UTC
         tempd=$(tail -n 1 "$CACHE" | sed 's/\x1b\[[0-9;]*m//g; s/ UTC//')
         date=$(date --date="$tempd" +%s --utc)
-        dateadd=$(echo "$date+300" | bc) # add N to date
+        dateadd=$(("$date+300")) # add N to date
         difference=$(echo "$dateadd-($(date +%s --utc))+1" | bc)
-        if [[ $difference -gt 0 ]]; then
-            if [[ $difference -lt 10 ]]; then
+        if [ "$difference" -gt 0 ]; then
+            if [ "$difference" -lt 10 ]; then
                 [ "$debug" -eq 1 ] && notify-send "rate - sleep to sync:" "$difference sec"
                 sleep "$difference"
-            elif [[ $difference -lt 299 ]]; then
+            elif [ "$difference" -lt 299 ]; then
                 [ "$debug" -eq 1 ] && notify-send "rate - sync difference:" "$difference sec"
             fi
         fi
@@ -425,21 +425,49 @@ get_n_lines() {
 do_curl() { curl "-sf${insecure}" "$URL" ;}
 
 upd_cache() {
-    # if date now > cached date + N -> curl and upd cache
+    [ "$color" -eq 0 ] || return
     get_date
-    if [[ $(date +%s --utc) -gt $dateadd && $color -eq 0 ]]; then
-        table=$(do_curl)
-        # if last line is date UTC -> upd cache
-        if [[ $(echo "$table" | tail -n 1) =~ [0-9]{4}(.[0-9][0-9]){5}.[0-9]+.UTC ]]; then
-            echo "$table" > "$CACHE"
-            rate_process
+    date_now=$(date --utc +%s)
+    # if date now > cached date + N -> curl and upd cache
+    if [ "$date_now" -gt "$dateadd" ]; then
+        requested_data=$(do_curl)
+        # get date from last line, in table on rate.sx it is usually UTC date
+        date_str_request=$(echo "$requested_data" | tail -n1)
+        # validate that last line of requested_data ends properly
+        # before continuing to more complex checks
+        case "$date_str_request" in
+            *" UTC") ;;
+            *) return ;;
+        esac
+        # validate date string in request
+        if date --date="${date_str_request}" >/dev/null 2>&1; then # suppress output & errors
+            date_in_request=$(date --utc --date="${date_str_request}" +%s)
         else
-            [ "$debug" -eq 1 ] && notify-send "last line of table not date UTC"
+            # [ "$debug" -eq 1 ] && notify-send -u critical "[$bname]" "not valid date string in request.\n"
+            notify-send -u critical -t 0 "[$bname]" "not valid date string in request.\n"
+            return
         fi
-        if [ "$debug" -eq 1 ]; then
-            get_date
-            notify-send "rate srv sync:" "$(date --date=@"$date" +%R):last $(date +%R):now"
+        # validate date string in cache
+        date_str_cache=$(tail -n1 "$CACHE")
+        if date --date="${date_str_cache}" >/dev/null 2>&1; then # suppress output & errors
+            date_in_cache=$(date --utc --date="${date_str_cache}" +%s)
+        else
+            notify-send -u critical -t 0 "[$bname]" "not valid date string in cache file.\n"
+            return
         fi
+        # NOTE: almost impossible, but just in case...
+        # if date in cache is more recent than in request
+        if [ "$date_in_cache" -gt "$date_in_request" ]; then
+            if [ "$date_now" -lt "$date_in_request" ]; then
+                notify-send -u critical -t 0 "[$bname] ALERT" "date now is behind the date in request!\n"
+            else
+                notify-send -u critical -t 0 "[$bname] ALERT" "date in cache is more recent than in request!\n"
+            fi
+            return
+        fi
+        # all checks are passed -> update cache with more recent data
+        echo "$requested_data" > "$CACHE"
+        rate_process
     fi
 }
 
