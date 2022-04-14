@@ -97,7 +97,7 @@ get_opt() {
             exchange="$1"
             ;;
         -k|--insecure)
-            insecure=( --insecure )
+            insecure="k"
             ;;
         -f|--format)
             shift
@@ -335,10 +335,19 @@ rate_process() {
     echo "$form_post" > "$RATE_POST"
 }
 
+frmt_out() {
+    [ -z "$frmt" ] && frmt="$format"
+    case "$frmt" in
+        *%[rcpHhms]*) ;;
+        *) return ;;
+    esac
+    frmt=$(echo "$frmt" | awk -vr="$1" -vt="$2" '{gsub(r,t); print $0}')
+}
+
 # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
 # shellcheck disable=SC2059 # Don't use variables in the printf format string.
 get_form_out() {
-    multiline="$1"
+    multiline=$(cat "$CACHE")
     IFS=',' read -ra array <<< "$output"
     for name in "${array[@]}"; do
         foundline=$(echo "$multiline" | tail -n +13 | grep -Fiw "$name" | sed 's/│ //g')
@@ -369,22 +378,21 @@ get_form_out() {
             colored_change_emojis "$ch01h" "$ch24h"
         fi
 
-        frmt="$format"
-        [[ "$format" =~ "%r" ]] && frmt=$(echo "$frmt" | sed -E 's/%r/'"$rank"'/g')
-        [[ "$format" =~ "%c" ]] && frmt=$(echo "$frmt" | sed -E 's/%c/'"$coin"'/g')
-        [[ "$format" =~ "%p" ]] && frmt=$(echo "$frmt" | sed -E 's/%p/'"$price"'/g')
-        [[ "$format" =~ "%H" ]] && frmt=$(echo "$frmt" | sed -E 's/%H/'"$ch24h"'/g')
-        [[ "$format" =~ "%h" ]] && frmt=$(echo "$frmt" | sed -E 's/%h/'"$ch01h"'/g')
-        [[ "$format" =~ "%m" ]] && frmt=$(echo "$frmt" | sed -E 's/%m/'"$mcap"'/g')
-        [[ "$format" =~ "%s" ]] && frmt=$(echo "$frmt" | sed -E 's/%s/'"$spark"'/g')
-        out+="$frmt""$delimiter"
+        frmt_out "%r" "$rank"
+        frmt_out "%c" "$coin"
+        frmt_out "%p" "$price"
+        frmt_out "%H" "$ch24h"
+        frmt_out "%h" "$ch01h"
+        frmt_out "%m" "$mcap"
+        frmt_out "%s" "$spark"
+        out="${out}${frmt}${delimiter}"
+        frmt=""
     done
     echo -e "$out"
 }
 
 get_date() {
     if [ -f "$CACHE" ]; then
-        TABLE=$(cat "$CACHE")
         # clean date from possible ANSI sequences of colored cache text, +remove UTC
         tempd=$(tail -n 1 "$CACHE" | sed 's/\x1b\[[0-9;]*m//g; s/ UTC//')
         date=$(date --date="$tempd" +%s --utc)
@@ -405,8 +413,8 @@ get_date() {
 }
 
 get_n_lines() {
-    multiline="$1"
-    sumn=$(echo "11+$n*2" | bc)
+    multiline=$(cat "$CACHE")
+    sumn=$(("11+$n*2"))
     head=$(echo "$multiline" | head -n "$sumn")
     time="$(date --date=@"$date" +%R):loc. $(date --date=@"$date" +%R --utc):UTC"
     boxb=$(echo "$multiline" | grep -F '┌─' | tr '┌' '└' | tr '┬' '┴' | tr '┐' '┘')
@@ -414,44 +422,42 @@ get_n_lines() {
     echo -e "$head""\n$boxb""\n$time""\n$tail"
 }
 
-do_curl() {
-    url="$1"
-    TABLE=$(curl -sf "${insecure[@]}" "$url")
-}
+do_curl() { curl "-sf${insecure}" "$URL" ;}
 
 upd_cache() {
-    url="$1"
     # if date now > cached date + N -> curl and upd cache
+    get_date
     if [[ $(date +%s --utc) -gt $dateadd && $color -eq 0 ]]; then
-        do_curl "$url"
+        table=$(do_curl)
         # if last line is date UTC -> upd cache
-        if [[ $(echo "$TABLE" | tail -n 1) =~ [0-9]{4}(.[0-9][0-9]){5}.[0-9]+.UTC ]]; then
-            echo "$TABLE" > "$CACHE"
+        if [[ $(echo "$table" | tail -n 1) =~ [0-9]{4}(.[0-9][0-9]){5}.[0-9]+.UTC ]]; then
+            echo "$table" > "$CACHE"
+            rate_process
         else
-            [ "$debug" -eq 1 ] && notify-send "last line of TABLE not date UTC"
+            [ "$debug" -eq 1 ] && notify-send "last line of table not date UTC"
         fi
-        get_date
-        [ "$debug" -eq 1 ] && notify-send "rate srv sync:" "$(date --date=@"$date" +%R):last $(date +%R):now"
+        if [ "$debug" -eq 1 ]; then
+            get_date
+            notify-send "rate srv sync:" "$(date --date=@"$date" +%R):last $(date +%R):now"
+        fi
     fi
 }
 
 main() {
     parse_in "$@"
     get_defaults
-    BASE="https://${exchange}.rate.sx/${special}"
-    URL="${BASE}?qF${T}&n=${num}"
+    base_url="https://${exchange}.rate.sx/${special}"
+    URL="${base_url}?qF${T}&n=${num}"
     [ "$test" ] && echo "$URL" && exit 0
-    get_date
-    upd_cache "$URL"
+    upd_cache
 
     # main
     if [ "$output" ]; then
-        get_form_out "$TABLE"
+        get_form_out
     elif [ "$n" ] && [ "$color" -eq 0 ]; then
-        get_n_lines "$TABLE"
+        get_n_lines
     else
-        do_curl "$URL"
-        echo "$TABLE"
+        do_curl
     fi
 }
 
