@@ -391,14 +391,12 @@ get_form_out() {
     echo -e "$out"
 }
 
-get_n_lines() {
-    multiline=$(cat "$CACHE")
-    sumn=$(("11+$n*2"))
-    head=$(echo "$multiline" | head -n "$sumn")
-    time="$(date --date=@"$date" +%R):loc. $(date --date=@"$date" +%R --utc):UTC"
-    boxb=$(echo "$multiline" | grep -F '┌─' | tr '┌' '└' | tr '┬' '┴' | tr '┐' '┘')
-    tail=$(echo "$multiline" | tail -n 1)
-    echo -e "$head""\n$boxb""\n$time""\n$tail"
+get_n_first_coins() {
+    tnuml=$(("11+$n*2"))
+    tmain=$(head -n "$tnuml" "$CACHE")
+    tbbot=$(grep -F '┌──────┬─' "$CACHE" | tr '┌' '└' | tr '┬' '┴' | tr '┐' '┘')
+    tdate=$(tail -n1 "$CACHE")
+    printf "%s\n%s\n%s\n" "$tmain" "$tbbot" "$tdate"
 }
 
 do_curl() { curl "-sf${insecure}" "$URL" ;}
@@ -466,7 +464,7 @@ main() {
     if [ "$output" ]; then
         get_form_out
     elif [ "$n" ] && [ "$color" -eq 0 ]; then
-        get_n_lines
+        get_n_first_coins
     else
         do_curl
     fi
