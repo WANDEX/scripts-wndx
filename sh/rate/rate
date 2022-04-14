@@ -391,27 +391,6 @@ get_form_out() {
     echo -e "$out"
 }
 
-get_date() {
-    if [ -f "$CACHE" ]; then
-        # clean date from possible ANSI sequences of colored cache text, +remove UTC
-        tempd=$(tail -n 1 "$CACHE" | sed 's/\x1b\[[0-9;]*m//g; s/ UTC//')
-        date=$(date --date="$tempd" +%s --utc)
-        dateadd=$(("$date+300")) # add N to date
-        difference=$(echo "$dateadd-($(date +%s --utc))+1" | bc)
-        if [ "$difference" -gt 0 ]; then
-            if [ "$difference" -lt 10 ]; then
-                [ "$debug" -eq 1 ] && notify-send "rate - sleep to sync:" "$difference sec"
-                sleep "$difference"
-            elif [ "$difference" -lt 299 ]; then
-                [ "$debug" -eq 1 ] && notify-send "rate - sync difference:" "$difference sec"
-            fi
-        fi
-    else
-        [ "$debug" -eq 1 ] && notify-send "[rate]" "$CACHE\nDoes not exist, or not regular file -> exit."
-        exit 1
-    fi
-}
-
 get_n_lines() {
     multiline=$(cat "$CACHE")
     sumn=$(("11+$n*2"))
@@ -426,10 +405,22 @@ do_curl() { curl "-sf${insecure}" "$URL" ;}
 
 upd_cache() {
     [ "$color" -eq 0 ] || return
-    get_date
+    if [ ! -f "$CACHE" ]; then
+        do_curl > "$CACHE"
+        return
+    fi
+    # validate date string in cache & that date string actually exist in cache file
+    date_str_cache=$(tail -n1 "$CACHE")
+    if date --date="${date_str_cache}" >/dev/null 2>&1; then # suppress output & errors
+        date_in_cache=$(date --utc --date="${date_str_cache}" +%s)
+    else
+        notify-send -u critical -t 0 "[$bname]" "not valid date string in cache file.\n"
+        return
+    fi
+    # add slightly more than default update time which is 5 min (300 sec)
+    date_next_approx_upd=$(("$date_in_cache+333"))
     date_now=$(date --utc +%s)
-    # if date now > cached date + N -> curl and upd cache
-    if [ "$date_now" -gt "$dateadd" ]; then
+    if [ "$date_now" -gt "$date_next_approx_upd" ]; then
         requested_data=$(do_curl)
         # get date from last line, in table on rate.sx it is usually UTC date
         date_str_request=$(echo "$requested_data" | tail -n1)
@@ -445,14 +436,6 @@ upd_cache() {
         else
             # [ "$debug" -eq 1 ] && notify-send -u critical "[$bname]" "not valid date string in request.\n"
             notify-send -u critical -t 0 "[$bname]" "not valid date string in request.\n"
-            return
-        fi
-        # validate date string in cache
-        date_str_cache=$(tail -n1 "$CACHE")
-        if date --date="${date_str_cache}" >/dev/null 2>&1; then # suppress output & errors
-            date_in_cache=$(date --utc --date="${date_str_cache}" +%s)
-        else
-            notify-send -u critical -t 0 "[$bname]" "not valid date string in cache file.\n"
             return
         fi
         # NOTE: almost impossible, but just in case...
