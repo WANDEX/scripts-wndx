@@ -65,11 +65,15 @@ get_opt() {
     LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
-    mplen=3 # min price string length as int value
-    printf_h="%2s"
-    printf_m="%3.0f"
-    printf_p="%.${mplen}g"
-    printf_r="%2.0f"
+    mplen=3 # min price string length for the decimal value format
+    printf_r="%4s"
+    printf_n="%8s"
+    printf_p="%d"
+    printf_P="%.2f"
+    printf_p_mid="%.3f"
+    printf_p_low="%.1e"
+    printf_h="%+d" # add %% if you need % sign
+    printf_m="%3d"
     exchange="usd"
     format="%c:%p"
     delimiter=" "
@@ -292,46 +296,63 @@ colored_change_emojis() {
     fi
 }
 
-rate_process() {
-    # clean & hide | bars as columns
+awk_format() {
+    # make all formatting inside one awk script
     # rank,coin,price,ch24h,ch01h,mcap,spark
-    form_pre=$(tail -n +13 "$CACHE" | head -n -2 | sed '/├─/d' | column -t -H 1,3,5,7,9,11,13,15)
-    echo "$form_pre" > "$RATE_PRE"
-    # make everything inside one awk
-    form_post=$(awk '
-    {
-        printf "%-10s %-15s", $1, $2;
-        printf "\t";
+    echo "$1" | awk \
+        -v printf_r="$printf_r" \
+        -v printf_n="$printf_n" \
+        -v printf_p="$printf_p" \
+        -v printf_P="$printf_P" \
+        -v printf_p_low="$printf_p_low" \
+        -v printf_p_mid="$printf_p_mid" \
+        -v printf_h="$printf_h" \
+        -v printf_m="$printf_m" \
+        -v mplen="$mplen" \
+    '{
+        printf printf_r, $1;
+        printf "%-10s\t", "";
+
+        printf printf_n, $2;
+        printf "%-15s\t", "";
 
         # len of price value in decimal format;
         dlen=length(sprintf("%d", $3));
-        if (dlen > 2)
-            printf "%d", $3;
-        else if (dlen == 2)
-            printf "%.2f", $3;
+        if (dlen >= mplen)
+            printf printf_p, $3;
+        else if (dlen == mplen - 1)
+            printf printf_P, $3;
+        else if ($3 <= 0.0001)
+            printf printf_p_low, $3;
         else
-            if ($3 <= 0.0001)
-                printf "%.1e", $3;
-            else
-                printf "%.3f", $3;
-        printf "\t\t\t";
+            printf printf_p_mid, $3;
+        printf "%-15s\t", "";
 
-        # add + to change % and format as decimal without % sign
-        printf "%+d\t\t%+d", $4, $5;
-        printf "\t\t";
+        printf printf_h, $4;
+        printf "%-15s\t", "";
+        printf printf_h, $5;
+        printf "%-15s\t", "";
 
-        # only decimal of mcap + letter(BM)
-        if (match($6, "B$"))
-            printf "%dB", $6;
-        else if (match($6, "M$"))
-            printf "%dM", $6;
-        else
-            printf "%d", $6;
-        printf "\t\t";
+        printf printf_m, $6;
+        if (! match(printf_m, "%s"))
+            # add mcap letter(BM) after format if any
+            if (match($6, "B$"))
+                printf "B";
+            else if (match($6, "M$"))
+                printf "M";
+        printf "%-15s\t", "";
 
-        printf "%-15s", $7;
+        printf "%s", $7;
         printf "\n";
-    }' "$RATE_PRE" | column -t)
+    }'
+}
+
+rate_process() {
+    # clean & hide | bars as columns
+    form_pre=$(tail -n +13 "$CACHE" | head -n -2 | sed '/├─/d' | column -t -H 1,3,5,7,9,11,13,15)
+    echo "$form_pre" > "$RATE_PRE"
+    # NOTE: column -t discards - printf 'right justify', but makes table compact
+    form_post=$(awk_format "$form_pre" | column -t)
     echo "$form_post" > "$RATE_POST"
 }
 
