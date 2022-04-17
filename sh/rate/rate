@@ -59,10 +59,34 @@ intv() {
     esac
 }
 
+trailing_args() {
+    # echo "${*}"
+    argarray=("$@")
+    oargcount="${#argarray[@]}"
+    stringarray="${argarray[*]}"
+    # substring: if first arg starts without '-'...
+    if [[ "$stringarray" != -* && $oargcount -eq 1 ]]; then
+            special="${argarray[0]}"
+            color=1 # allow colored output
+    elif [[ "$stringarray" =~ " in " || "$stringarray" =~ " to " ]]; then
+        if [ "$oargcount" -eq 3 ]; then
+            special="${argarray[0]}"
+            exchange="${argarray[2]}"
+        elif [ "$oargcount" -eq 4 ]; then
+            special="${argarray[0]}${argarray[1]}"
+            exchange="${argarray[3]}"
+        else
+            echo "[$oargcount]:args"
+            echo "I don't get it. exit"
+            exit 1
+        fi
+    fi
+}
+
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=c:Cd:e:kf:hHn:o:t
-    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d
+    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d,update
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     mplen=3 # min price string length for the decimal value format
@@ -77,7 +101,8 @@ get_opt() {
     exchange="usd"
     format="%c:%p"
     delimiter=" "
-    n_hardcoded_max=600 # current max available coins in table
+    num=10      # get num coins by default
+    num_max=600 # current max available coins
     Ec=0
     color=0 # color mode 1=on
     debug=0 # debug mode 1=on
@@ -119,8 +144,8 @@ get_opt() {
         -n|--number)
             shift
             intv "$1"
-            n="$1"
-            [ "$n" -gt "$n_hardcoded_max" ] && n="$n_hardcoded_max"
+            num="$1"
+            [ "$num" -gt "$num_max" ] && num="$num_max"
             ;;
         -o|--output)
             shift
@@ -165,8 +190,18 @@ get_opt() {
         --s2d)
             s2d=1
             ;;
+        --update)
+            update=1
+            num="$num_max"
+            ;;
         --)
             shift
+            trailing_args "$@"
+            if [ "$color" -eq 1 ]; then
+                T=''  # colored output (ANSI sequences)
+            else
+                T='T' # text only (without ANSI sequences)
+            fi
             break
             ;;
         esac
@@ -174,40 +209,7 @@ get_opt() {
     done
 }
 
-parse_in() {
-    get_opt "$@"
-    argarray=("$@")
-    argcount="${#argarray[@]}"
-    stringarray="${argarray[*]}"
-    # substring: if first arg starts without '-'...
-    if [[ "$stringarray" != -* && $argcount -eq 1 ]]; then
-            special="${argarray[0]}"
-            color=1 # allow colored output
-    elif [[ "$stringarray" =~ " in " || "$stringarray" =~ " to " ]]; then
-        if [[ $argcount -eq 3 ]]; then
-            special="${argarray[0]}"
-            exchange="${argarray[2]}"
-        elif [[ $argcount -eq 4 ]]; then
-            special="${argarray[0]}${argarray[1]}"
-            exchange="${argarray[3]}"
-        else
-            echo "[$argcount]:args"
-            echo "I don't get it. exit"
-            exit 1
-        fi
-    fi
-}
-
-get_defaults() {
-    # essential defaults in order to work
-    if [ "$color" -eq 1 ]; then
-        num="${n:-10}" # to get n coins or 10 default
-        T='' # allow colored output
-    else
-        num="$n_hardcoded_max" # to get all coins from table to parse
-        T='T' # text only, no ANSI sequences
-    fi
-}
+get_opt "$@"
 
 # shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
 colored_change_emojis() {
@@ -380,6 +382,7 @@ frmt_frmt() {
 }
 
 get_form_out() {
+    # output data about specific coins with special data formatting
     frmt=""
     multiline=""
     IFS=','
@@ -401,7 +404,7 @@ get_form_out() {
 }
 
 get_n_first_coins() {
-    tnuml=$(("11+$n*2"))
+    tnuml=$(("11+$num*2"))
     tmain=$(head -n "$tnuml" "$CACHE")
     tbbot=$(grep -F '┌──────┬─' "$CACHE" | tr '┌' '└' | tr '┬' '┴' | tr '┐' '┘')
     tdate=$(tail -n1 "$CACHE")
@@ -411,9 +414,12 @@ get_n_first_coins() {
 do_curl() { curl "-sf${insecure}" "$URL" ;}
 
 upd_cache() {
+    # these checks are crucial!
+    [ "$update" ] || return
     [ "$color" -eq 0 ] || return
     if [ ! -f "$CACHE" ]; then
         do_curl > "$CACHE"
+        rate_process
         return
     fi
     # validate date string in cache & that date string actually exist in cache file
@@ -458,21 +464,22 @@ upd_cache() {
         # all checks are passed -> update cache with more recent data
         echo "$requested_data" > "$CACHE"
         rate_process
+        # do not output anything and silently exit
+        exit 0
+    else
+        # 3 - Early: It is too early for the update!
+        exit 3
     fi
 }
 
 main() {
-    parse_in "$@"
-    get_defaults
     base_url="https://${exchange}.rate.sx/${special}"
     URL="${base_url}?qF${T}&n=${num}"
     [ "$test" ] && echo "$URL" && exit 0
     upd_cache
-
-    # main
     if [ "$output" ]; then
         get_form_out
-    elif [ "$n" ] && [ "$color" -eq 0 ]; then
+    elif [ "$oargcount" -eq 0 ] && [ "$color" -eq 0 ]; then
         get_n_first_coins
     else
         do_curl
