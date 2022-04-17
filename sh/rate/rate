@@ -20,7 +20,6 @@ GENERAL OPTIONS
     -t, --test      Activate url preview test mode
     -C, --color     Allow ANSI sequences for colored output, not only text data
 OUTPUT ONLY OPTIONS
-    -d, --delimiter Delimiter to use between coins (man echo -e sequences sup.)
     -f, --format    Format of output:
         %r rank | %c coin | %p price | %H ch24h | %h ch01h | %m mcap | %k spark
     printf format of fields:
@@ -33,7 +32,7 @@ HELP
     -H, --help-full Display full help which obtained via curl
     --currencies    List of supported currencies with their full names
     --coins         List of supported cryptocurrencies with their full names
-    --debug         Show debug messages
+    --update        Update data (if all checks are passed)
 EXAMPLES
     $bname -c 1337usd -e eur
     $bname 1337usd to eur
@@ -85,8 +84,8 @@ trailing_args() {
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=c:Cd:e:kf:hHn:o:t
-    LONG=convert:,color,coins,currencies,debug,delimiter:,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d,update
+    SHORT=c:Ce:kf:hHn:o:t
+    LONG=convert:,color,coins,currencies,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d,update
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     mplen=3 # min price string length for the decimal value format
@@ -100,12 +99,10 @@ get_opt() {
     printf_m="%3d"
     exchange="usd"
     format="%c:%p"
-    delimiter=" "
     num=10      # get num coins by default
     num_max=600 # current max available coins
     Ec=0
     color=0 # color mode 1=on
-    debug=0 # debug mode 1=on
     s2d=0
     eval set -- "$OPTIONS"
     while true; do
@@ -116,10 +113,6 @@ get_opt() {
             ;;
         -C|--color)
             color=1
-            ;;
-        -d|--delimiter)
-            shift
-            delimiter="$1"
             ;;
         -e|--exchange)
             shift
@@ -183,9 +176,6 @@ get_opt() {
             ;;
         --currencies)
             special=":currencies"
-            ;;
-        --debug)
-            debug=1
             ;;
         --s2d)
             s2d=1
@@ -447,7 +437,6 @@ upd_cache() {
         if date --date="${date_str_request}" >/dev/null 2>&1; then # suppress output & errors
             date_in_request=$(date --utc --date="${date_str_request}" +%s)
         else
-            # [ "$debug" -eq 1 ] && notify-send -u critical "[$bname]" "not valid date string in request.\n"
             notify-send -u critical -t 0 "[$bname]" "not valid date string in request.\n"
             return
         fi
