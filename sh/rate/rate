@@ -479,7 +479,7 @@ main() {
     upd_cache
     if [ "$output" ]; then
         get_form_out
-    elif [ "$oargcount" -eq 0 ] && [ "$color" -eq 0 ]; then
+    elif [ -z "$special" ] && [ "$oargcount" -eq 0 ] && [ "$color" -eq 0 ]; then
         get_n_first_coins
     else
         do_curl
