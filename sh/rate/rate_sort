@@ -2,7 +2,8 @@
 # rate script to get sorted by column N items length output
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
-RATE_FORM="${CSCRDIR}/rate/rate_form"
+RATE_FORM="${CSCRDIR}/rate/rate_pre"
+# RATE_FORM="${CSCRDIR}/rate/rate_post"
 [ -f "$RATE_FORM" ] || exit 1 # silently exit if file does not exist
 
 bname="$(basename "$0")"
@@ -10,7 +11,7 @@ USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
 OPTIONS
     -a, --ascending     Sort list in a ascending manner
-    -c, --colnum        Sort by: 1-name 2-price 3-c24h 4-c01h 5-mcap 6-rank
+    -c, --colnum        Sort by: 1-rank 2-name 3-price 4-c24h 5-c01h 6-mcap
     -d, --descending    Sort list in a descending manner
     -h, --help          Display help
     -n, --number        Number of coins in list
@@ -18,7 +19,7 @@ OPTIONS
     --top               Get head -n N before applying sort
 EXAMPLE
     # make sort in range of ranks 11-20 (get 10 coins total)
-    $bname -a -c6 -n20 --top 20 --bot 10
+    $bname -a -c3 -n20 --top 20 --bot 10
 ")
 
 intv() {
@@ -65,11 +66,9 @@ get_opt() {
             shift
             intv "$1"
             num="$1"
-            if [ -f "$RATE_FORM" ]; then
-                # shellcheck disable=SC2002 # this is not useles cat!
-                num_total=$(cat "$RATE_FORM" | wc -l)
-                [ "$num" -gt "$num_total" ] && num=$num_total
-            fi
+            # shellcheck disable=SC2002 # this is not useless cat!
+            num_total=$(cat "$RATE_FORM" | wc -l)
+            [ "$num" -gt "$num_total" ] && num=$num_total
             ;;
         --bot)
             shift
@@ -109,12 +108,22 @@ sort_cmd() {
         cat "$RATE_FORM" > "$tmpf"
     fi
     case "$colnum" in
-        1) sort "-k1${sr}" "$tmpf";;
-        2) sort "-k2n${sr}" "$tmpf";;
-        3) sort "-k3bg${sr}" "-k4bg${sr}" "$tmpf";;
-        4) sort "-k4bg${sr}" "-k3bg${sr}" "$tmpf";;
-        5) sort "-k6n${sr}" "$tmpf";;
-        6) sort "-k6n${sr}" "$tmpf";;
+        1) sort "-k1bn${sr}" "$tmpf";;
+        2) sort "-k2b${sr}" "$tmpf";;
+        3) sort "-k3bn${sr}" "$tmpf";;
+        4) sort "-k4bg${sr}" "-k5bg${sr}" "$tmpf";;
+        5) sort "-k5bg${sr}" "-k4bg${sr}" "$tmpf";;
+        6) # sort by market capitalization respecting [B]illion & [M]illion letters
+            _pre_sort=$(sort "-k6bn${sr}" "$tmpf")
+            _b=$(echo "$_pre_sort" | awk '{if (match($6, "B$")) print}')
+            _m=$(echo "$_pre_sort" | awk '{if (match($6, "M$")) print}')
+            if [ -z "$sr" ]; then
+                sorted=$(printf "%s\n%s\n" "$_m" "$_b")
+            else
+                sorted=$(printf "%s\n%s\n" "$_b" "$_m")
+            fi
+            echo "$sorted"
+            ;;
         *) echo "there is no such column with number:$colnum exit." && exit 1;;
     esac
     rm -f "$tmpf" # delete the temporary file, as it is no longer needed
