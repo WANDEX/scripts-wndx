@@ -3,7 +3,8 @@
 # scrolling them automatically with sleep time between each.
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
-RATE_FORM="${CSCRDIR}/rate/rate_form"
+RATE_FORM="${CSCRDIR}/rate/rate_pre"
+# RATE_FORM="${CSCRDIR}/rate/rate_post"
 [ -f "$RATE_FORM" ] || exit 1 # silently exit if file does not exist
 
 OLDIFS="$IFS"
@@ -15,9 +16,9 @@ USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
 OPTIONS
     -e, --exclude       Comma separated list of the column names to exclude:
-                        'c,p,H,h,m,r' - full list of awailable column names
+                        'r,c,p,H,h,m,k' - full list of available column names
     -h, --help          Display help
-    -l, --line-number   Add to output current line number (as rating)
+    -l, --line-number   Add to output current line number (as rank)
     -p, --prefix        Prefix message before the data
     -s, --slp           Sleep time between printing coin data
     --bar               Special oneshot mode without loop, but with temp file
@@ -46,8 +47,8 @@ get_opt() {
     # PLACE FOR OPTION DEFAULTS
     bar=0
     inf=0
-    def_columns="c,p,H,h,m,r" # list of column names
-    del_columns="p,m,r"       # list of columns to delete
+    def_columns="r,c,p,H,h,m,k" # list of column names
+    del_columns="r,p,m,k"       # list of columns to delete
     cln=0
     num=10
     prefix=""
@@ -83,11 +84,9 @@ get_opt() {
             shift
             intv "$1"
             num="$1"
-            if [ -f "$RATE_FORM" ]; then
-                # shellcheck disable=SC2002 # this is not useles cat!
-                num_total=$(cat "$RATE_FORM" | wc -l)
-                [ "$num" -gt "$num_total" ] && num=$num_total
-            fi
+            # shellcheck disable=SC2002 # this is not useless cat!
+            num_total=$(cat "$RATE_FORM" | wc -l)
+            [ "$num" -gt "$num_total" ] && num=$num_total
             ;;
         -p|--prefix)
             shift
@@ -157,7 +156,7 @@ bar() {
         GLUE_ENDS=$(echo "$LINE_ENDS" | paste -d' ' "$ufile" - | column -to' ')
         echo "$GLUE_ENDS" | sed '1s/^/>/' > "$ufile" # insert at beginning of first line
     elif [ -f "$ufile" ]; then
-        # shellcheck disable=SC2002 # this is not useles cat!
+        # shellcheck disable=SC2002 # this is not useless cat!
         ltotal=$(cat "$ufile" | wc -l) # total num of lines
         lnum=$(sed -n '/>/=' "$ufile") # get line number with > char
         sed -i "$lnum"'s/^>//' "$ufile"  # rm > on current line
