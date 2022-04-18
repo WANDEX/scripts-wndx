@@ -1,24 +1,98 @@
 #!/bin/bash
 # show cryptocurrency price data via rate wrapper
 
+PID="$(pidof dwmblocks)"
 fold="[+]rate"
+NL='
+' # New Line
 
 # $1 is update signal, used to update dwmblocks
 SIG=$((34+$1))
 # $2 is a postfix after the LIST name
 POSTFIX="${2:-"_0"}"
-LIST="$CSCRDIR"'/rate/rate_stat_coin_list'"$POSTFIX"
+LIST="${CSCRDIR}/rate/rate_stat_coin_list${POSTFIX}"
 [ -f "$LIST" ] && CAT=$(head -n 1 "$LIST")
 # if file is empty use default list of coins
 COIN_LIST="${CAT:-"BTC,ETH,BCH"}"
 
+_ch24h() { rate -o "$COIN_LIST" -f "%c:\t%H"; }
 price() { rate -o "$COIN_LIST" -f "%c:%p"; }
-ch24h() { rate -o "$COIN_LIST" -f "%c:%H" --s2d; }
 mcap()  { rate -o "$COIN_LIST" -f "%c:%m"; }
 fold()  { echo "$fold"; }
+ch24h() { colored_change ;}
+
+colored_change() {
+    in=$(_ch24h)
+    if [ "$S2D" ]; then
+        c_r="$(s2d -c red)"
+        c_g="$(s2d -c green)"
+        u_w='▲ '
+        d_w='▼ '
+        u_h=' '
+        d_h=' '
+        u_n=' '
+        d_n=' '
+        u_l=' '
+        d_l=' '
+    else
+        u_w='🟩'
+        d_w='🟥'
+        u_h='🟢'
+        d_h='🔴'
+        u_n='▲ '
+        d_n='▼ '
+        u_l=' '
+        d_l=' '
+    fi
+    echo "$in" | awk \
+        -v u_w="$u_w" \
+        -v d_w="$d_w" \
+        -v u_h="$u_h" \
+        -v d_h="$d_h" \
+        -v u_n="$u_n" \
+        -v d_n="$d_n" \
+        -v u_l="$u_l" \
+        -v d_l="$d_l" \
+        -v c_r="$c_r" \
+        -v c_g="$c_g" \
+    '{
+        cW=19;
+        cH=9;
+        cN=4;
+
+        printf "%s", $1;
+
+        if ($2 < 0) {
+            if (c_r) { printf "^c%s^", c_r; }
+            if ($2 < -cW)
+                printf "%s", d_w;
+            else if ($2 < -cH)
+                printf "%s", d_h;
+            else if ($2 < -cN)
+                printf "%s", d_n;
+            else
+                printf "%s", d_l;
+        } else {
+            if (c_g) { printf "^c%s^", c_g; }
+            if ($2 > cW)
+                printf "%s", u_w;
+            else if ($2 > cH)
+                printf "%s", u_h;
+            else if ($2 > cN)
+                printf "%s", u_n;
+            else
+                printf "%s", u_l;
+        }
+        if (c_g || c_r) { printf "^d^"; }
+        # remove +- signs as we use specific direction symbols
+        gsub("[+-]", "", $2);
+        printf "%s ", $2;
+        printf "\n";
+    }'
+}
 
 array=(price ch24h mcap)
-file="$CSCRDIR"'/rate/rate_stat'"$POSTFIX"
+file="${CSCRDIR}/rate/rate_stat${POSTFIX}"
 current_element=$(tail -n 1 "$file")
 [ -z "$current_element" ] && current_element="price"
 new_elem="$current_element"
@@ -71,19 +145,18 @@ fold_elem() {
     fi
 }
 
-PID="$(pidof dwmblocks)"
 case $BLOCK_BUTTON in
-        1) kill -$SIG "$PID" ;;
-        2) fold_elem ; kill -$SIG "$PID" ;;
+        1) kill "-$SIG" "$PID" ;;
+        2) fold_elem ; kill "-$SIG" "$PID" ;;
         3) notify-send "💰crypto rate status module" "\- Shows my rate wrapper output
 - MMB fold/unfold $fold
 - Scroll to change between outputs." ;;
-        4) prev_elem ; kill -$SIG "$PID" ;;
-        5) next_elem ; kill -$SIG "$PID" ;;
+        4) prev_elem ; kill "-$SIG" "$PID" ;;
+        5) next_elem ; kill "-$SIG" "$PID" ;;
         6) "$TERMINAL" -e "$EDITOR" "$0" ;;
 esac
 
-# exec function based on substring
+# call function based on substring
 case "$new_elem" in
     "price") output=$(price) ;;
     "ch24h") output=$(ch24h) ;;
@@ -92,21 +165,25 @@ case "$new_elem" in
 esac
 
 # add profits to output after each coin with existing hist data
-IFS=',' read -ra clarr <<< "$COIN_LIST"
-for coin_name in "${clarr[@]}"; do
+IFS=','
+for coin_name in $COIN_LIST; do
     pro="$(rate_prof "$coin_name")"
     if [ -n "$pro" ]; then
-        # split into words (parts not separated by spaces)
-        for words in $output; do
-            case "$words" in
+        IFS="$NL"
+        for line in $output; do
+            case "$line" in
                 *"$coin_name"*)
-                    # output="$(echo "$output" | sed "s/${words}/${words}\(${pro}\)/")"
+                    # output="$(echo "$output" | sed "s/${line}/${line}\(${pro}\)/")"
                     # shellckeck fix: See if you can use ${variable//search/replace} instead. (I2001)
-                    output="${output//${words}/${words}\(${pro}\)}"
+                    output="${output//${line}/ ${line}\(${pro}\)}"
                 ;;
             esac
         done
     fi
+    IFS=','
 done
+
+# make it single line
+output=$(echo "$output" | tr -d '\n')
 
 printf "%s" "$output"
