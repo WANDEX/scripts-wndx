@@ -25,8 +25,7 @@ OUTPUT ONLY OPTIONS
     printf format of fields:
         --Pr rank | --Pp price | --Ph change | --Pm mcap
     -o, --output    Get multiple coins data separated via ',' as a delimiter
-        --Ec        Get colored emoji (unicode symbols) in ch24h & ch01h
-        --Mp        Min price string length as int value, format starts to apply
+        --Mp        Min decimal price string length to apply the decimal value format
 HELP
     -h, --help      Display help
     -H, --help-full Display full help which obtained via curl
@@ -39,7 +38,7 @@ EXAMPLES
     $bname 1337 usd in eur
     - Above examples are equal and are valid.
     $bname -c 1BTC-10ETH+100LTC
-    $bname -o btc,eth,bch -f '%c:%p[%H]' -d '\\n'
+    $bname -o btc,eth,bch -f '%c:%p\\t[%H]'
 ")
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
@@ -85,7 +84,7 @@ trailing_args() {
 get_opt() {
     # Parse and read OPTIONS command-line options
     SHORT=c:Ce:kf:hHn:o:t
-    LONG=convert:,color,coins,currencies,Ec,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,s2d,update
+    LONG=convert:,color,coins,currencies,exchange:,format:,help,insecure,help-full,Mp:,number:,output:,Ph:,Pm:,Pp:,Pr:,test,update
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     mplen=3 # min price string length for the decimal value format
@@ -101,9 +100,6 @@ get_opt() {
     format="%c:%p"
     num=10      # get num coins by default
     num_max=600 # current max available coins
-    Ec=0
-    color=0 # color mode 1=on
-    s2d=0
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
@@ -163,9 +159,6 @@ get_opt() {
             shift
             printf_r="$1"
             ;;
-        --Ec)
-            Ec=1
-            ;;
         --Mp)
             shift
             intv "$1"
@@ -177,9 +170,6 @@ get_opt() {
         --currencies)
             special=":currencies"
             ;;
-        --s2d)
-            s2d=1
-            ;;
         --update)
             update=1
             num="$num_max"
@@ -187,6 +177,7 @@ get_opt() {
         --)
             shift
             trailing_args "$@"
+            [ -n "$color" ] || color=0
             if [ "$color" -eq 1 ]; then
                 T=''  # colored output (ANSI sequences)
             else
@@ -200,93 +191,6 @@ get_opt() {
 }
 
 get_opt "$@"
-
-# shellcheck disable=SC2001 # See if you can use ${variable//search/replace} instead.
-colored_change_emojis() {
-    ch01h="$1"
-    ch24h="$2"
-    if [ "$S2D" ] && [ "$s2d" -eq 1 ]; then
-        c_g="$(s2d -c green)"
-        c_r="$(s2d -c red)"
-        u_w='▲ ' && upW="^c${c_g}^${u_w}^d^"
-        d_w='▼ ' && dwW="^c${c_r}^${d_w}^d^"
-        u_h=' ' && upH="^c${c_g}^${u_h}^d^"
-        d_h=' ' && dwH="^c${c_r}^${d_h}^d^"
-        u_n=' ' && upN="^c${c_g}^${u_n}^d^"
-        d_n=' ' && dwN="^c${c_r}^${d_n}^d^"
-        u_l=' ' && upL="^c${c_g}^${u_l}^d^"
-        d_l=' ' && dwL="^c${c_r}^${d_l}^d^"
-    else
-        upW='🟩'
-        dwW='🟥'
-        upH='🟢'
-        dwH='🔴'
-        upN='▲ '
-        dwN='▼ '
-        upL=' '
-        dwL=' '
-    fi
-    cW=20
-    cH=10
-    cN=5
-
-    # get only int number
-    _24h=$(echo "$ch24h" | sed "s/+//; s/-//; s/%//" | xargs printf "%.*f\n" "0")
-    _01h=$(echo "$ch01h" | sed "s/+//; s/-//; s/%//" | xargs printf "%.*f\n" "0")
-
-    # 24
-    if [[ $_24h -ge $cW ]]; then
-        if [[ $ch24h == +* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/+/$upW/g")
-        elif [[ $ch24h == -* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/-/$dwW/g")
-        fi
-    elif [[ $_24h -ge $cH ]]; then
-        if [[ $ch24h == +* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/+/$upH/g")
-        elif [[ $ch24h == -* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/-/$dwH/g")
-        fi
-    elif [[ $_24h -ge $cN ]]; then
-        if [[ $ch24h == +* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/+/$upN/g")
-        elif [[ $ch24h == -* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/-/$dwN/g")
-        fi
-    else
-        if [[ $ch24h == +* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/+/$upL/g")
-        elif [[ "$ch24h" == -* ]]; then
-            ch24h=$(echo "$ch24h" | sed "s/-/$dwL/g")
-        fi
-    fi
-    # 01
-    if [[ $_01h -ge $cW ]]; then
-        if [[ $ch01h == +* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/+/$upW/g")
-        elif [[ $ch01h == -* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/-/$dwW/g")
-        fi
-    elif [[ $_01h -ge $cH ]]; then
-        if [[ $ch01h == +* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/+/$upH/g")
-        elif [[ $ch01h == -* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/-/$dwH/g")
-        fi
-    elif [[ $_01h -ge $cN ]]; then
-        if [[ $ch01h == +* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/+/$upN/g")
-        elif [[ $ch01h == -* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/-/$dwN/g")
-        fi
-    else
-        if [[ $ch01h == +* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/+/$upL/g")
-        elif [[ $ch01h == -* ]]; then
-            ch01h=$(echo "$ch01h" | sed "s/-/$dwL/g")
-        fi
-    fi
-}
 
 awk_format() {
     # make all formatting inside one awk script
