@@ -4,8 +4,9 @@
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
 RATE_FORM="${CSCRDIR}/rate/rate_pre"
-# RATE_FORM="${CSCRDIR}/rate/rate_post"
 [ -f "$RATE_FORM" ] || exit 1 # silently exit if file does not exist
+# shellcheck disable=SC2002 # this is not useless cat!
+num_total=$(cat "$RATE_FORM" | wc -l)
 
 OLDIFS="$IFS"
 NL='
@@ -84,9 +85,7 @@ get_opt() {
             shift
             intv "$1"
             num="$1"
-            # shellcheck disable=SC2002 # this is not useless cat!
-            num_total=$(cat "$RATE_FORM" | wc -l)
-            [ "$num" -gt "$num_total" ] && num=$num_total
+            [ "$num" -gt "$num_total" ] && num="$num_total"
             ;;
         -p|--prefix)
             shift
@@ -117,9 +116,9 @@ get_opt() {
                 echo "the column number is required for sorting by ... exit."
                 exit 1
             fi
-            # if top/bot not set explicitly -> set to the num
-            [ -z "$top" ] && top="$num"
-            [ -z "$bot" ] && bot="$num"
+            # if top/bot not set explicitly
+            [ -z "$top" ] && top="$num_total"
+            [ -z "$bot" ] && bot="$num_total"
             break
             ;;
         esac
@@ -130,7 +129,7 @@ get_opt() {
 get_opt "$@"
 
 rate_sort_cmd() {
-    rate_sort -c "$colnum" -n "$num" "$ad" --top "$top" --bot "$bot"
+    rate_sort "${ad}" -c "$colnum" -n "$num" --top "$top" --bot "$bot"
 }
 
 hide_columns() {
