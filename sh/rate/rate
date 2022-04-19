@@ -1,13 +1,11 @@
-#!/bin/bash
-# get average crypto exchange rate for last ~5 min
+#!/bin/sh
+# rate.sx wrapper written in POSIX sh
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
 CACHE="${CSCRDIR}/rate/rate"
 RATE_PRE="${CSCRDIR}/rate/rate_pre"
 RATE_POST="${CSCRDIR}/rate/rate_post"
 
 OLDIFS="$IFS"
-NL='
-' # New Line
 
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
@@ -31,13 +29,15 @@ HELP
     -H, --help-full Display full help which obtained via curl
     --currencies    List of supported currencies with their full names
     --coins         List of supported cryptocurrencies with their full names
-    --update        Update data (if all checks are passed)
+    --update        Update data (if all checks are passed) (intended for cron)
 EXAMPLES
     $bname -c 1337usd -e eur
     $bname 1337usd to eur
     $bname 1337 usd in eur
-    - Above examples are equal and are valid.
     $bname -c 1BTC-10ETH+100LTC
+    $bname 1BTC-10ETH+100LTC
+    - Above examples are equally valid.
+    $bname btc@1M in eur
     $bname -o btc,eth,bch -f '%c:%p\\t[%H]'
 ")
 
@@ -58,27 +58,35 @@ intv() {
 }
 
 trailing_args() {
-    # echo "${*}"
-    argarray=("$@")
-    oargcount="${#argarray[@]}"
-    stringarray="${argarray[*]}"
-    # substring: if first arg starts without '-'...
-    if [[ "$stringarray" != -* && $oargcount -eq 1 ]]; then
-            special="${argarray[0]}"
-            color=1 # allow colored output
-    elif [[ "$stringarray" =~ " in " || "$stringarray" =~ " to " ]]; then
-        if [ "$oargcount" -eq 3 ]; then
-            special="${argarray[0]}"
-            exchange="${argarray[2]}"
-        elif [ "$oargcount" -eq 4 ]; then
-            special="${argarray[0]}${argarray[1]}"
-            exchange="${argarray[3]}"
-        else
-            echo "[$oargcount]:args"
-            echo "I don't get it. exit"
-            exit 1
-        fi
+    targs="${*}"
+    targc="${#}"
+    [ -z "$targs" ] && return
+    case "$targs" in
+        *" in "*|*" to "*)
+            clean_targs=$(echo "$targs" | awk '{gsub(/ (in|to) /, " "); print}')
+            if [ "$targc" -eq 4 ]; then
+                special=$(echo "$clean_targs" | awk -F" " '{printf "%s%s", $1, $2}')
+                exchange=$(echo "$clean_targs" | awk -F" " '{print $3}')
+            elif [ "$targc" -eq 3 ]; then
+                special=$(echo "$clean_targs" | awk -F" " '{printf "%s", $1}')
+                exchange=$(echo "$clean_targs" | awk -F" " '{print $2}')
+            else
+                printf "(%s) unsupported num of args" "${targc}"
+                exit 4
+            fi
+            # allow colored output for args like this:
+            # btc@7d in eur
+            color=1
+            return
+            ;;
+    esac
+    if [ "$targc" -eq 1 ]; then
+        special="$targs"
+        color=1 # allow colored output
+        return
     fi
+    printf "%s\n[%s]\n" "unsupported trailing arguments:" "$targs"
+    exit 6
 }
 
 get_opt() {
@@ -372,7 +380,7 @@ main() {
     upd_cache
     if [ "$output" ]; then
         get_form_out
-    elif [ -z "$special" ] && [ "$oargcount" -eq 0 ] && [ "$color" -eq 0 ]; then
+    elif [ -z "$special" ] && [ "$color" -eq 0 ]; then
         get_n_first_coins
     else
         do_curl
