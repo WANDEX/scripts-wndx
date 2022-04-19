@@ -1,9 +1,11 @@
 #!/bin/bash
 # show rate data of top coins by $1-COLNUM, $2-ORDER/direction
 
-COLNUM=${1:-3}
-ORDER=${2:-"gain"}
-SIG=$((34+$3))
+SIG=$((34+$1))
+COLNUM=${2:-4}
+ORDER=${3:-"gain"}
+
+bname=$(basename "$0")
 
 case "$ORDER" in
     *"-d"*|*"g"*|*"u"*)
@@ -36,24 +38,24 @@ case "$ORDER" in
 esac
 
 case "$COLNUM" in
-    1) PREFIX='C';;
-    2) PREFIX='P';;
-    3) PREFIX='24';;
-    4) PREFIX='01';;
-    5) PREFIX='M';;
-    6) PREFIX='R';;
+    1) PREFIX='R';;
+    2) PREFIX='C';;
+    3) PREFIX='P';;
+    4) PREFIX='24';;
+    5) PREFIX='01';;
+    6) PREFIX='M';;
     *) echo "there is no such column with number:$COLNUM exit." && exit 1;;
 esac
 
 # common options for rate_flip & rate_sort
 OPTS=("$AD" -c "$COLNUM" -n 10)
 # shellcheck disable=SC2206 # (Double quote to prevent globbing and word splitting)
-RFOPTS=(${OPTS[@]} -l --exclude "p,m" --bar --prefix "${UD}${PREFIX}:")
+RFOPTS=(${OPTS[@]} -l --exclude "r,p,m,k" --bar --post --prefix "${UD}${PREFIX}:")
 fold="[+]rt($PREFIX)$UD"
 
 show_report() {
     DATA=$(rate_sort "${OPTS[@]}")
-    notify-send -u low "$(basename "$0") $ORDER" "\n$DATA\n"
+    notify-send -u low -t 0 "$bname $ORDER" "\n$DATA\n"
 }
 
 guess_file() {
@@ -74,20 +76,20 @@ fold_elem() {
     if [ "$last_line" = "$fold" ]; then
         sed -i '$d' "$file" # remove last line
     else
-        # write to end of a file
+        # write to the end of the file
         echo "$fold" >> "$file"
     fi
     PID="$(pidof dwmblocks)"
-    kill -$SIG "$PID" # refresh
+    kill "-$SIG" "$PID" # refresh
 }
 
 
 case $BLOCK_BUTTON in
     1) show_report ;;
     2) fold_elem ;;
-    3) notify-send "$(basename "$0")" "Show rate data for top coins ($ORDER)
+    3) notify-send "$bname" "Show rate data for top coins ($ORDER)
 - Left click to show rate_sort data
-- MMB fold/unfold $fold $ORDER" ;;
+- MMB fold/unfold $fold" ;;
     6) "$TERMINAL" -e "$EDITOR" "$0" ;;
 esac
 
@@ -98,4 +100,3 @@ if [ "$last_line" = "$fold" ]; then
 else
     rate_flip "${RFOPTS[@]}"
 fi
-
