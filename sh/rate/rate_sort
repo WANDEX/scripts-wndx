@@ -3,8 +3,7 @@
 
 CSCRDIR="${CSCRDIR:-"$HOME/.cache/cscripts"}"
 RATE_FORM="${CSCRDIR}/rate/rate_pre"
-# RATE_FORM="${CSCRDIR}/rate/rate_post"
-[ -f "$RATE_FORM" ] || exit 1 # silently exit if file does not exist
+[ -f "$RATE_FORM" ] || exit 2 # silently exit if file does not exist
 
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
@@ -15,6 +14,7 @@ OPTIONS
     -d, --descending    Sort list in a descending manner
     -h, --help          Display help
     -n, --number        Number of coins in list
+    -p, --post          Sort post formatted data
     --bot               Get tail -n N before applying sort
     --top               Get head -n N before applying sort
 EXAMPLE
@@ -38,8 +38,8 @@ intv() {
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=ac:dhn:
-    LONG=ascending,bot:,colnum:,descending,help,number:,top:
+    SHORT=ac:dhn:P
+    LONG=ascending,bot:,colnum:,descending,help,number:,post,top:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     num=10
@@ -68,15 +68,19 @@ get_opt() {
             num="$1"
             # shellcheck disable=SC2002 # this is not useless cat!
             num_total=$(cat "$RATE_FORM" | wc -l)
-            [ "$num" -gt "$num_total" ] && num=$num_total
+            [ "$num" -gt "$num_total" ] && num="$num_total"
+            ;;
+        -P|--post)
+            RATE_FORM="${CSCRDIR}/rate/rate_post"
+            [ -f "$RATE_FORM" ] || exit 3 # silently exit if file does not exist
             ;;
         --bot)
             shift
-            bot=$1
+            bot="$1"
             ;;
         --top)
             shift
-            top=$1
+            top="$1"
             ;;
         --)
             shift
@@ -124,9 +128,13 @@ sort_cmd() {
             fi
             echo "$sorted"
             ;;
-        *) echo "there is no such column with number:$colnum exit." && exit 1;;
+        *) column_not_supported=1;;
     esac
     rm -f "$tmpf" # delete the temporary file, as it is no longer needed
+    if [ "$column_not_supported" ]; then
+        echo "${colnum} column is not supported, exit."
+        exit 7
+    fi
 }
 
 main() {
