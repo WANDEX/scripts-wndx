@@ -50,7 +50,7 @@ esac
 # common options for rate_flip & rate_sort
 OPTS=("$AD" -c "$COLNUM" -n 10)
 # shellcheck disable=SC2206 # (Double quote to prevent globbing and word splitting)
-RFOPTS=(${OPTS[@]} -l --exclude "r,p,m,k" --bar --post --prefix "${UD}${PREFIX}:")
+RFOPTS=(${OPTS[@]} -l --exclude "r,p,m" --bar --post --prefix "${UD}${PREFIX}:")
 fold="[+]rt($PREFIX)$UD"
 
 show_report() {

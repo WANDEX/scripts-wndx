@@ -19,7 +19,7 @@ GENERAL OPTIONS
     -C, --color     Allow ANSI sequences for colored output, not only text data
 OUTPUT ONLY OPTIONS
     -f, --format    Format of output:
-        %r rank | %c coin | %p price | %H ch24h | %h ch01h | %m mcap | %k spark
+        %r rank | %c coin | %p price | %H ch24h | %h ch01h | %m mcap
     printf format of fields:
         --Pr rank | --Pp price | --Ph change | --Pm mcap
     -o, --output    Get multiple coins data separated via ',' as a delimiter
@@ -244,16 +244,15 @@ awk_format() {
                 printf "B";
             else if (match($6, "M$"))
                 printf "M";
-        printf "%-15s\t", "";
+        # printf "%-15s\t", "";
 
-        printf "%s", $7;
         printf "\n";
     }'
 }
 
 rate_process() {
-    # clean & hide | bars as columns
-    form_pre=$(tail -n +13 "$CACHE" | head -n -2 | sed '/├─/d' | column -t -H 1,3,5,7,9,11,13,15)
+    # clean & hide | bars as columns & spark column
+    form_pre=$(tail -n +13 "$CACHE" | head -n -2 | sed '/├─/d' | column -t -H 1,3,5,7,9,11,13,14,15)
     echo "$form_pre" > "$RATE_PRE"
     # NOTE: column -t discards - printf 'right justify', but makes table compact
     form_post=$(awk_format "$form_pre" | column -t)
@@ -274,7 +273,6 @@ frmt_frmt() {
         %H*) r="%H"; cn=4; f="$printf_h" ;;
         %h*) r="%h"; cn=5; f="$printf_h" ;;
         %m*) r="%m"; cn=6; f="$printf_m" ;;
-        %k*) r="%k"; cn=7; f="%s" ;;
         *) return ;;
     esac
     [ -n "$r" ] || return

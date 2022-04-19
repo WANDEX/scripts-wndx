@@ -17,7 +17,7 @@ USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
 OPTIONS
     -e, --exclude       Comma separated list of the column names to exclude:
-                        'r,c,p,H,h,m,k' - full list of available column names
+                        'r,c,p,H,h,m' - full list of available column names
     -h, --help          Display help
     -l, --line-number   Add to output current line number (as rank)
     -p, --prefix        Prefix message before the data
@@ -48,8 +48,8 @@ get_opt() {
     # PLACE FOR OPTION DEFAULTS
     bar=0
     inf=0
-    def_columns="r,c,p,H,h,m,k" # list of column names
-    del_columns="r,p,m,k"       # list of columns to delete
+    def_columns="r,c,p,H,h,m" # list of column names
+    del_columns="r,p,m"       # list of columns to delete
     cln=0
     num=10
     prefix=""
