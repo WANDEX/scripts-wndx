@@ -42,8 +42,8 @@ intv() {
 
 get_opt() {
     # Parse and read OPTIONS command-line options
-    SHORT=ac:de:hln:p:s:
-    LONG=ascending,bar,bot:,colnum:,descending,exclude:,help,line-number,inf,number:,prefix:,slp:,top:
+    SHORT=ac:de:hln:p:Ps:
+    LONG=ascending,bar,bot:,colnum:,descending,exclude:,help,line-number,inf,number:,prefix:,post,slp:,top:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     bar=0
@@ -91,6 +91,9 @@ get_opt() {
             shift
             prefix="$1"
             ;;
+        -P|--post)
+            post='P'
+            ;;
         -s|--slp)
             shift
             slp=$1
@@ -129,7 +132,7 @@ get_opt() {
 get_opt "$@"
 
 rate_sort_cmd() {
-    rate_sort "${ad}" -c "$colnum" -n "$num" --top "$top" --bot "$bot"
+    rate_sort "${ad}${post}" -c "$colnum" -n "$num" --top "$top" --bot "$bot"
 }
 
 hide_columns() {
