@@ -7,7 +7,7 @@ USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
 OPTIONS
     -h, --help      Display help
-    -n, --name      Name for timer used in notification
+    -n, --name      Name of the timer/stopwatch
     -s, --sleep     Seconds to sleep
     -t, --timer     Set countdown timer to ... '1h2m3s'
 EXAMPLES
@@ -85,22 +85,28 @@ sec_sum() {
 countdown() {
     sec=$(sec_sum)
     edate=$(($(date +%s) + "$sec"))
+    # shellcheck disable=SC2059 # to be able to pass \t\n etc.
+    [ -n "$tname" ] && printf "${tname}\n"
     keypress=''
     while [ -z "$keypress" ] && [ "$edate" -ge "$(date +%s)" ]; do
-        printf "  %s\r" "[$(date -u --date @$(("$edate" - $(date +%s))) +"$DATEF")]"
+        printf "%s\r" "[$(date -u --date @$(("$edate" - $(date +%s))) "+$DATEF")]"
         sleep "$s"
         keypress="$(cat -v)"
     done
     if at_path dunstify && [ -z "$keypress" ]; then
-        dunstify -b -t 0 -u critical -h "$DST:t" -h "$DST:hi" "[t] $tname ENDED" "[$timer] CLOSE ME!"
+        summary="[t] ENDED [$timer] CLOSE ME!"
+        # _ to not print return code: 2 when notification is manually closed
+        _=$(dunstify -b -t 0 -u critical -h "$DST:t" -h "$DST:hi" "$summary" "\n$tname\n")
     fi
 }
 
 stopwatch() {
     sdate=$(date +%s)
+    # shellcheck disable=SC2059 # to be able to pass \t\n etc.
+    [ -n "$tname" ] && printf "${tname}\n"
     keypress=''
     while [ -z "$keypress" ]; do
-        printf "  %s\r" "[$(date -u --date @$(($(date +%s) - "$sdate")) +"$DATEF")]"
+        printf "%s\r" "[$(date -u --date @$(($(date +%s) - "$sdate")) "+$DATEF")]"
         sleep "$s"
         keypress="$(cat -v)"
     done
