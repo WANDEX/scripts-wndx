@@ -2,10 +2,13 @@
 # calculates profit - Percentage Increase for coin name $1
 
 XDGCHCS="${XDG_CACHE_HOME:-"$HOME/.cache"}/cscripts"
-DIR="${CSCRDIR:-$XDGCHCS}/rate_hist"
+CSCRDIR="${CSCRDIR:-"$XDGCHCS"}"
+DIR="${CSCRDIR}/rate_hist"
+RATE_PRE="${CSCRDIR}/rate/rate_pre"
+WITHOUT_REQUEST=1
 
 coin="$1"
-[ -z "$coin" ] && echo "provide coin name as \$1. exit." && exit 1
+[ -z "$coin" ] && echo "provide coin name as \$1. Exit." && exit 1
 jsonfile=$(find "$DIR" -type f -name "*$coin*" -iname "*buy*" | sort -rn | head -n1)
 [ ! -r "$jsonfile" ] && exit 1 # silently exit without outputting anything
 
@@ -14,12 +17,18 @@ coin=$(jq -r '.coin' "$jsonfile")
 filled=$(jq -r '.filled' "$jsonfile")
 total=$(jq -r '.total' "$jsonfile")
 
-convert="${filled}${coin}"
-total_online="$(rate -c "$convert" -f "%p")" # current online price
+if [ "$WITHOUT_REQUEST" -eq 0 ]; then
+    convert="${filled}${coin}"
+    fprice="$(rate -c "$convert" -f "%p")" # current online price
+else
+    # do calculation offline, by taking price from cached data
+    cached_price=$(grep -Fiw "$coin" "$RATE_PRE" | awk '{print $3}')
+    fprice=$(echo "${filled}*${cached_price}" | bc)
+fi
 
-final="$total_online"; initial="$total"
+final="$fprice"; initial="$total"
 # Percentage Increase formula:
 # %increase = 100 * ((final-initial) / |initial|)
 formula="100 * (${final}-${initial}) / ${initial}"
-pInc="$(echo "$formula" | bc)"
+pInc=$(echo "$formula" | bc)
 printf "%d%%" "$pInc"
