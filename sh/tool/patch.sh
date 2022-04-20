@@ -1,11 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 # apply/reverse all patches easily,
 # to keep the stacking order of the patches.
 
-# SOURCE GLOBALLY DEFINED TERMINAL COLOR VARIABLES
-# shellcheck disable=SC1091
-# shellcheck source=$ENVSCR/termcolors
-TC="$ENVSCR/termcolors" && [ -r "${TC}" ] && . "${TC}"
+# shellcheck disable=SC2059 # => ascii escape sequences in format (see no issues with that)
+# ^ Don't use variables in the printf format string. Use printf '..%s..' "$foo".
 
 SEP='|'; NLS=')'
 ST_S=0; ST_F=0; ST_E=0; ST_TOTAL=0
@@ -33,9 +31,8 @@ OPTIONS
 
 check_existance() {
     GITRDIR=$(git rev-parse --show-toplevel)
-    DIR="$GITRDIR/patch"
-    if [ -d "$DIR" ]; then
-        DIR="$DIR"
+    if [ -d "$GITRDIR/patch" ]; then
+        DIR="$GITRDIR/patch"
     elif [ -d "$GITRDIR/patches" ]; then
         DIR="$GITRDIR/patches"
     else
@@ -252,8 +249,8 @@ validate() {
     if [ "$YES" -eq 0 ]; then
         [ "$solo_n" ] && SA="ONLY this patch?" || SA="this patch?"
         Q="$RA $SA [y/n] "
-        if [[ "$INSIDE_READ_LINE_LOOP" -eq 1 ]]; then
-            read -p "$Q" -n 1 -r <&$IN
+        if [ "$INSIDE_READ_LINE_LOOP" -eq 1 ]; then
+            read -p "$Q" -n 1 -r <&"$IN"
         else
             read -p "$Q" -n 1 -r
         fi
@@ -274,7 +271,7 @@ get_line_num() {
 get_patch_mark() {
     patch_file_path="$1"
     lnum=$(get_line_num "$patch_file_path")
-    mark=$(sed -n $lnum's/^'"$SEP"'\(.\).*$/\1/p' "$FILE")
+    mark=$(sed -n "$lnum"'s/^'"$SEP"'\(.\).*$/\1/p' "$FILE")
     echo "$mark"
 }
 
@@ -286,18 +283,18 @@ add_mark() {
         printf "${BLU}Patch contained${END} ${RED}FAILED Hunk${END}"
         printf "${BLU} and marked as:${END}${RED}F${END}\n"
     fi
-    [ ! "$dry" ] && sed -i $lnum"s/^$SEP./$SEP$mark/" "$FILE" &&
+    [ ! "${dry[0]}" ] && sed -i "$lnum""s/^$SEP./$SEP$mark/" "$FILE" &&
     [ "$debug" -eq 1 ] && echo "mark:${RED}$mark${END} SET!"
 }
 
 statistic() {
     exit_code="$1"
     case "$exit_code" in
-        0) ST_S=$(($ST_S + 1)); echo "${GRN_S}[OK]${END}^";;
-        1) ST_F=$(($ST_F + 1)); echo "${RED_S}[FAILED]${END}^";;
-        2) ST_E=$(($ST_E + 1)); echo "${RED_S}[ERROR]${END}^";;
+        0) ST_S=$((ST_S + 1)); echo "${GRN_S}[OK]${END}^";;
+        1) ST_F=$((ST_F + 1)); echo "${RED_S}[FAILED]${END}^";;
+        2) ST_E=$((ST_E + 1)); echo "${RED_S}[ERROR]${END}^";;
     esac
-    ST_TOTAL=$(($ST_TOTAL + 1))
+    ST_TOTAL=$((ST_TOTAL + 1))
     [ "$ST_F" -eq 0 ] && ST_F_MSG="" || ST_F_MSG="${RED_S} FAILED:$ST_F ${END}"
     [ "$ST_E" -eq 0 ] && ST_E_MSG="" || ST_E_MSG="${RED_S} ERROR:$ST_E ${END}"
     [ "$ST_S" -eq "$ST_TOTAL" ] && ST_S_MSG="" || ST_S_MSG="${GRN_S} SUCCESS:$ST_S ${END}"
@@ -320,7 +317,7 @@ patch_cmd() {
 
 cmmnd() {
     arg=$1
-    cd "$GITRDIR" # cd to root git dir
+    cd "$GITRDIR" || exit 1 # cd to root git dir
     # replace all digit characters with nothing and check for length
     if [[ -n ${arg//[0-9]/} ]]; then # True if the length is non-zero.
         # arg is string
@@ -333,7 +330,7 @@ cmmnd() {
     fi
     # discard first column & trim leading spaces
     file=$(echo "$GREP" | awk '{$1="";print $0}' | sed "s/^[ ]*//")
-    if [ ! "$R" ]; then # if -R option not explicitly specified
+    if [ ! "${R[0]}" ]; then # if -R option not explicitly specified
         # automatic toggle behavior of patch -R (reverse/apply) option
         case "$(get_patch_mark "$file")" in
             A) R=(--reverse); M="R"; RA="Reverse";;
@@ -345,7 +342,7 @@ cmmnd() {
                 print_colored "$file"
                 while true; do
                     if [ "$INSIDE_READ_LINE_LOOP" -eq 1 ]; then
-                        read -p "Apply/Reverse this patch? [a/r] " -n 1 -r <&$IN
+                        read -p "Apply/Reverse this patch? [a/r] " -n 1 -r <&"$IN"
                     else
                         read -p "Apply/Reverse this patch? [a/r] " -n 1 -r
                     fi
@@ -395,4 +392,3 @@ main() {
 }
 
 main "$@"
-
