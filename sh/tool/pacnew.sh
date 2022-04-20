@@ -23,7 +23,7 @@ showdiff() {
 show_diff_question() {
     while true; do
         echo "${CYN}Show diff for each file?${END} [Y/n/q]:"
-        read -n 1 -r
+        read -r
         echo # new line
         case "$REPLY" in
             [Yy]) SDQ=1 ; break ;;
@@ -39,7 +39,7 @@ action() {
     U="${UND}"
     E="${END}"
     printf "%s: " "[${U}D${E}iff/${U}Q${E}uit/Y/N]"
-    read -n 1 -r
+    read -r
     echo # new line
     case "$REPLY" in
         [Dd])
