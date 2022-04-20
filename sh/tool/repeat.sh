@@ -1,14 +1,15 @@
 #!/bin/sh
 # auto repeat command (for example xdotool command)
 
+bname=$(basename "$0")
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $bname [OPTION...]
 OPTIONS
     -c, --command   Command to execute
     -h, --help      Display help
     -s, --sleep     Seconds to sleep between executions (default 0.5)
 EXAMPLE
-    $(basename "$0") -c 'xdotool click 1' -s 1.0
+    $bname -c 'xdotool click 1' -s 1.0
 ")
 
 get_opt() {
@@ -45,7 +46,7 @@ get_opt() {
 get_opt "$@"
 DIR="$XDG_CACHE_HOME/repeat"
 mkdir -p "$DIR"
-NAME=$(echo "${command_string// /_}")
+NAME=$(echo "$command_string" | sed "s/ /_/g")
 CACHE="$DIR/$NAME"'_repeat'
 
 if [ -f "$CACHE" ]; then
@@ -60,6 +61,6 @@ fi
 while [ -f "$CACHE" ]; do
     command_cached=$(cat "$CACHE")
     sh -c "$command_cached"
-    sleep $sleep_time
+    sleep "$sleep_time"
 done
 
