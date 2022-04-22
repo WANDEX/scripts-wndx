@@ -7,7 +7,7 @@ FONTSDIR="${FIGLET_FONTDIR:-"/usr/share/figlet/fonts"}"
 
 TEXT="${1:-$(whoami)}"
 othr="${*/$1/}" # remove $1 from all other args
-IFS=" " read -r -a OPTS <<< "$othr" # array of figlet options
+IFS=' ' read -r -a OPTS <<< "$othr" # array of figlet options
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 
