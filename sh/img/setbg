@@ -50,8 +50,8 @@ get_opt() {
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     # get xwallpaper & 'magick convert' args from cache
-    IFS=" " read -r -a xargs_array <<< "$C_XARGS"
-    IFS=" " read -r -a margs_array <<< "$C_MARGS"
+    IFS=' ' read -r -a xargs_array <<< "$C_XARGS"
+    IFS=' ' read -r -a margs_array <<< "$C_MARGS"
     [ -z "${xargs_array[*]}" ] && xargs_array=( --zoom )
     MCT=${C_MCT:-0}
     output='all'
@@ -83,14 +83,14 @@ get_opt() {
         -m|--margs)
             shift
             if [ "$MCT" -eq 1 ]; then
-                IFS=" " read -r -a margs_array <<< "${margs_array[*]} $1"
+                IFS=' ' read -r -a margs_array <<< "${margs_array[*]} $1"
             else
-                IFS=" " read -r -a margs_array <<< "$1"
+                IFS=' ' read -r -a margs_array <<< "$1"
             fi
             ;;
         -x|--xargs)
             shift
-            IFS=" " read -r -a xargs_array <<< "$1"
+            IFS=' ' read -r -a xargs_array <<< "$1"
             ;;
         --mct)
             [ "$MCT" -eq 1 ] && MCT=0 || MCT=1 # toggle behavior of value
@@ -115,11 +115,11 @@ get_opt() {
                 preset="${preset//|/}"
                 [ -z "$preset" ] && exit 2 # select was canceled
                 if [ "$1" -lt 0 ]; then
-                    IFS=" " read -r -a margs_oneshot <<< "$preset"
+                    IFS=' ' read -r -a margs_oneshot <<< "$preset"
                 elif [ "$1" -gt 0 ]; then
-                    IFS=" " read -r -a margs_array <<< "${margs_array[*]} $preset"
+                    IFS=' ' read -r -a margs_array <<< "${margs_array[*]} $preset"
                 else
-                    IFS=" " read -r -a margs_array <<< "$preset"
+                    IFS=' ' read -r -a margs_array <<< "$preset"
                 fi
             else
                 echo "dmenu not found at path!"
