@@ -332,7 +332,7 @@ get_form_out() {
 }
 
 get_n_first_coins() {
-    tnuml=$(("11+$num*2"))
+    tnuml=$((11+num*2))
     tmain=$(head -n "$tnuml" "$CACHE")
     tbbot=$(grep -F '┌──────┬─' "$CACHE" | tr '┌' '└' | tr '┬' '┴' | tr '┐' '┘')
     tdate=$(tail -n1 "$CACHE")
