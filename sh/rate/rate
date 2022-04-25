@@ -359,7 +359,7 @@ upd_cache() {
         return
     fi
     # add slightly more than default update time which is 5 min (300 sec)
-    date_next_approx_upd=$(("$date_in_cache+333"))
+    date_next_approx_upd=$((date_in_cache+333))
     date_now=$(date --utc +%s)
     if [ "$date_now" -gt "$date_next_approx_upd" ]; then
         requested_data=$(do_curl)
