@@ -84,12 +84,12 @@ sec_sum() {
 
 countdown() {
     sec=$(sec_sum)
-    edate=$(($(date +%s) + "$sec"))
+    edate=$(($(date +%s) + sec))
     # shellcheck disable=SC2059 # to be able to pass \t\n etc.
     [ -n "$tname" ] && printf "${tname}\n"
     keypress=''
     while [ -z "$keypress" ] && [ "$edate" -ge "$(date +%s)" ]; do
-        printf "%s\r" "[$(date -u --date @$(("$edate" - $(date +%s))) "+$DATEF")]"
+        printf "%s\r" "[$(date -u --date @$((edate - $(date +%s))) "+$DATEF")]"
         sleep "$s"
         keypress="$(cat -v)"
     done
@@ -106,7 +106,7 @@ stopwatch() {
     [ -n "$tname" ] && printf "${tname}\n"
     keypress=''
     while [ -z "$keypress" ]; do
-        printf "%s\r" "[$(date -u --date @$(($(date +%s) - "$sdate")) "+$DATEF")]"
+        printf "%s\r" "[$(date -u --date @$(($(date +%s) - sdate)) "+$DATEF")]"
         sleep "$s"
         keypress="$(cat -v)"
     done
