@@ -104,24 +104,19 @@ if [ -n "$2" ]; then
     grep_query
 fi
 
-hm_to_sec() { date --date="$1" +%s ;} # convert time to seconds
-sec_diff() {
-    # subtract and return difference in seconds
-    _sec_diff="$(($1-$2))"
-    echo "$_sec_diff"
-}
+hm_to_sec() { date --date="$1" -u +%s ;} # convert time to seconds
 sec_to_hm() { date --date="@$1" -u +%R ;} # convert seconds to HH:MM
 
 sec_to_hm_inf() {
     # convert seconds into hours that bigger than 24h
-    time_hh_mm="$(date --date="@$1" -u +"%-H:%M")" # hours without leading zeroes -> to sum later
-    time_days="$(date --date="@$1" -u +"%-j")"
-    time_days="$(("$time_days-1"))" # subtract 1 (because always starts from 1)
+    time_hh_mm=$(date --date="@$1" -u "+%-H:%M") # hours without leading zeroes -> to sum later
+    time_days=$(date --date="@$1" -u "+%-j")
+    time_days=$((time_days-1)) # subtract 1 (because always starts from 1)
     if [ "$time_days" != "0" ]; then # because -gt 0 less stable
-        hours="$(("$time_days*24"))" # convert days to hours
-        time_hh="$(echo "$time_hh_mm" | cut -d: -f1)" # hours
-        time_mm="$(echo "$time_hh_mm" | cut -d: -f2)" # minutes
-        hh_sum="$(("$hours+$time_hh"))"
+        hours=$((time_days*24)) # convert days to hours
+        time_hh=$(echo "$time_hh_mm" | cut -d: -f1) # hours
+        time_mm=$(echo "$time_hh_mm" | cut -d: -f2) # minutes
+        hh_sum=$((hours+time_hh))
         time_hh_inf="${hh_sum}:${time_mm}"
         echo "$time_hh_inf"
     else
@@ -159,7 +154,7 @@ case "$3" in
             hm_to="$(echo "$line" | cut -d- -f2)"
             sec_fr="$(hm_to_sec "$hm_fr")"
             sec_to="$(hm_to_sec "$hm_to")"
-            seconds="$(sec_diff "$sec_to" "$sec_fr")"
+            seconds=$((sec_to - sec_fr)) # difference in seconds
             new="$(sec_to_hm "$seconds")"
             sleep 0.0001 # somehow fixes relatively rare calculation/replacement issue
             # printf "%s\t%s\t%s\n" "$line" "[$hm_fr-$hm_to]($seconds)" "{$new}" # only for debugging
