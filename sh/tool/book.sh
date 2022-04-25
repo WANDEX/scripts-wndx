@@ -20,7 +20,7 @@ ok() {
     case "$1" in
         reader) cp_reader=1 ;;
         backup) cp_backup=1 ;;
-        error) errors="$(("$errors+1"))" # count errors
+        error) errors=$((errors+1)) # count errors
     esac
     if [ -n "$2" ] && [ "$1" = "error" ]; then
         # incrementally add every book as new line
