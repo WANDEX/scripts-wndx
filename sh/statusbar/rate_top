@@ -91,6 +91,7 @@ case $BLOCK_BUTTON in
 - Left click to show rate_sort data
 - MMB fold/unfold $fold" ;;
     6) "$TERMINAL" -e "$EDITOR" "$0" ;;
+    8) "$TERMINAL" -e "$EDITOR" "$CSCRDIR/rate/rate_ignore" ;;
 esac
 
 file=$(guess_file)
