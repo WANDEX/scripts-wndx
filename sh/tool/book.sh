@@ -16,6 +16,10 @@ DST="string:x-dunst-stack-tag" # dunst tag
 cp_reader=0; cp_backup=0; errors=0
 books_caused_errors=""
 
+OLDIFS="$IFS"
+NL='
+' # New Line
+
 ok() {
     case "$1" in
         reader) cp_reader=1 ;;
@@ -58,6 +62,7 @@ fi
 
 books="$(find "$SRC_DIR" -type f -name "*.epub" -o -name "*.fb2")"
 [ -z "$books" ] && notify "no new books found. exit." && exit 0
+IFS="$NL"
 for book in $books; do
     # every loop iteration we set these variables to zero for each book
     cp_reader=0; cp_backup=0
@@ -78,6 +83,7 @@ for book in $books; do
         errify "ERROR: can't copy this book!\n$book"
     fi
 done
+IFS="$OLDIFS"
 
 if [ "$errors" -gt 0 ]; then
     errify "\n$books_caused_errors\n"
