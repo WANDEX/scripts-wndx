@@ -7,11 +7,11 @@ oext=".out" # out extension
 case "$1" in
     *.c)
         iext=".c"
-        std="-std=gnu17"
+        std="-std=c17"
     ;;
     *.cpp)
         iext=".cpp"
-        std="-std=gnu++17"
+        std="-std=c++17"
         pp="++"
     ;;
     *)
