@@ -85,21 +85,21 @@ grep_query() {
 if [ -n "$2" ]; then
     case "$2" in
         # grep for today, yesterday and any day, week name
-        -[0-9]*)                        grep_day "$(date -d "$2" +%A)" ;; # (relative) example: -1day
-        [Tt]oday)                       grep_day "$(date +%A)" ;;
-        [Yy]esterday)                   grep_day "$(date --date=yesterday +%A)" ;;
-        [Mm]o|[Mm]on|[Mm]onday)         grep_day "Monday"    ;;
-        [Tt]u|[Tt]ue|[Tt]uesday)        grep_day "Tuesday"   ;;
-        [Ww]e|[Ww]ed|[Ww]ednesday)      grep_day "Wednesday" ;;
-        [Tt]h|[Tt]hu|[Tt]hursday)       grep_day "Thursday"  ;;
-        [Ff]r|[Ff]ri|[Ff]riday)         grep_day "Friday"    ;;
-        [Ss]a|[Ss]at|[Ss]aturday)       grep_day "Saturday"  ;;
-        [Ss]u|[Ss]un|[Ss]unday)         grep_day "Sunday"    ;;
-        [Aa]ll|[Hh]istory|[Oo]verall)   grep_all=1   ;; # over all history
-        [Yy]ear)                        grep_year=1  ;;
-        [Mm]onth)                       grep_month=1 ;;
-        [Ww]eek)                        grep_week=1  ;; # full week
-        [iI][Ww]eek)                    grep_iweek=1 ;; # full week by days individually
+        -[0-9]*)                        grep_day "$(date -d "$2" +%a)" ;; # (relative) example: -1day
+        [Tt]oday)                       grep_day "$(date +%a)" ;;
+        [Yy]esterday)                   grep_day "$(date --date=yesterday +%a)" ;;
+        [Mm]o|[Mm]on|[Mm]onday)         grep_day "Mon" ;;
+        [Tt]u|[Tt]ue|[Tt]uesday)        grep_day "Tue" ;;
+        [Ww]e|[Ww]ed|[Ww]ednesday)      grep_day "Wed" ;;
+        [Tt]h|[Tt]hu|[Tt]hursday)       grep_day "Thu" ;;
+        [Ff]r|[Ff]ri|[Ff]riday)         grep_day "Fri" ;;
+        [Ss]a|[Ss]at|[Ss]aturday)       grep_day "Sat" ;;
+        [Ss]u|[Ss]un|[Ss]unday)         grep_day "Sun" ;;
+        [Aa]ll|[Hh]istory|[Oo]verall)   grep_all=1     ;; # over all history
+        [Yy]ear)                        grep_year=1    ;;
+        [Mm]onth)                       grep_month=1   ;;
+        [Ww]eek)                        grep_week=1    ;; # full week
+        [iI][Ww]eek)                    grep_iweek=1   ;; # full week by days individually
     esac
     grep_query
 fi
@@ -173,13 +173,13 @@ case "$3" in
 esac
 
 total_week() {
-    s_mon="$(echo "$slice" | grep -s "^Monday")"
-    s_tue="$(echo "$slice" | grep -s "^Tuesday")"
-    s_wed="$(echo "$slice" | grep -s "^Wednesday")"
-    s_thu="$(echo "$slice" | grep -s "^Thursday")"
-    s_fri="$(echo "$slice" | grep -s "^Friday")"
-    s_sat="$(echo "$slice" | grep -s "^Saturday")"
-    s_sun="$(echo "$slice" | grep -s "^Sunday")"
+    s_mon="$(echo "$slice" | grep -s "^Mon")"
+    s_tue="$(echo "$slice" | grep -s "^Tue")"
+    s_wed="$(echo "$slice" | grep -s "^Wed")"
+    s_thu="$(echo "$slice" | grep -s "^Thu")"
+    s_fri="$(echo "$slice" | grep -s "^Fri")"
+    s_sat="$(echo "$slice" | grep -s "^Sat")"
+    s_sun="$(echo "$slice" | grep -s "^Sun")"
     # calculate total time spent for each day of week individually
     t_mon="$(total_slice "$s_mon")"
     t_tue="$(total_slice "$s_tue")"
@@ -190,13 +190,13 @@ total_week() {
     t_sun="$(total_slice "$s_sun")"
     if [ "$grep_iweek" ]; then
         # print individual totals for each day of week
-        [ -n "$t_mon" ] && echo "mon: $t_mon"
-        [ -n "$t_tue" ] && echo "tue: $t_tue"
-        [ -n "$t_wed" ] && echo "wed: $t_wed"
-        [ -n "$t_thu" ] && echo "thu: $t_thu"
-        [ -n "$t_fri" ] && echo "fri: $t_fri"
-        [ -n "$t_sat" ] && echo "sat: $t_sat"
-        [ -n "$t_sun" ] && echo "sun: $t_sun"
+        [ -n "$t_mon" ] && echo "Mon: $t_mon"
+        [ -n "$t_tue" ] && echo "Tue: $t_tue"
+        [ -n "$t_wed" ] && echo "Wed: $t_wed"
+        [ -n "$t_thu" ] && echo "Thu: $t_thu"
+        [ -n "$t_fri" ] && echo "Fri: $t_fri"
+        [ -n "$t_sat" ] && echo "Sat: $t_sat"
+        [ -n "$t_sun" ] && echo "Sun: $t_sun"
     else
         week_totals="${t_mon} ${t_tue} ${t_wed} ${t_thu} ${t_fri} ${t_sat} ${t_sun}"
         week_seconds="$(total_time_spent "$week_totals")"
