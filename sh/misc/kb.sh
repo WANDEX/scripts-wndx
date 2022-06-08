@@ -21,4 +21,4 @@ else
     notify "⌨ QWERTY"
 fi
 
-xset r rate 200 60
+xset r rate 250 60
