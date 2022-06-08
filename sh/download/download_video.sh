@@ -1,8 +1,9 @@
 #!/bin/bash
 # download via youtube-dl video playlist or single video
 
+bname=$(basename "$0")
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $bname [OPTION...]
 OPTIONS
     -B, --best          Toggle using of simple 'best' format
     -b, --begin         Download from playlist index (default:1)
@@ -18,7 +19,7 @@ OPTIONS
     -u, --url           URL of video/stream
     -y, --ytdl          Any other youtube-dl native options (specify only inside \"\")
 EXAMPLES:
-    $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
+    $bname -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
 
 get_opt() {
