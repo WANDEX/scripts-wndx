@@ -1,20 +1,22 @@
-#!/bin/sh
+#!/bin/bash
+# NOTE: bash -> with dash jq throws: parse error: Invalid string: control characters
 # script for youtube-dl - get from stdin or as $1 arg JSON data from youtube-dl
 # and compose output path with optional parts based on their availability in JSON
 # SCRIPT OUTPUT EXAMPLES:
 # %(uploader)s/%(title)s.%(ext)s
 # %(uploader)s/%(playlist_title)s/%(playlist_index)003d. %(title)s.%(ext)s
 
+bname=$(basename "$0")
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage:  [OPTION...]
 OPTIONS
     -h, --help          Display help
     -r, --real          Get output not as a ytdl template, but with real values
 EXAMPLES
 # from stdin pipe
-    youtube-dl --dump-json --no-warnings --playlist-end=1 \"\$URL\" | $(basename "$0")
+    youtube-dl --dump-json --no-warnings --playlist-end=1 \"\$URL\" | $bname
 # from \$1 argument
-    $(basename "$0") \"\$JSON_DATA\"
+    $bname \"\$JSON_DATA\"
 ")
 
 [ "$1" = "-h" ] || [ "$1" = "--help" ] && echo "$USAGE" && exit 0
