@@ -14,8 +14,7 @@ NL='
 
 prf() {
     if [ -z "$1" ] || [ -z "$2" ]; then
-        echo "not enough args"
-        exit 4
+        exit 4 # not enough args
     fi
     echo "$1" | tail -n +3 | cut -d' ' -f1- --output-delimiter="$NL" | awk NF | sort > "$2"
 }
@@ -30,9 +29,9 @@ update_cache() {
 }
 
 run() {
-    items="$(find "$CACHE_DIR" -type f -printf "%f\n")"
-    item="$(printf "%s\n%s\n" "$items" "update_cache" | dmenu -p 'enter item to subsearch:' -l 30)"
-    [ -z "$item" ] && exit 0
+    items=$(find "$CACHE_DIR" -type f -printf "%f\n")
+    item=$(printf "%s\n%s\n" "$items" "update_cache" | dmenu -p 'enter item to subsearch:' -l 30)
+    [ -n "$item" ] || exit 0
     case "$item" in
         "update_cache")
             # run again after cache is updated
@@ -41,26 +40,31 @@ run() {
             return 0 # essential
         ;;
         "keywords")
-            cache="$(cat "$K_FILE")"
+            category=$(cat "$K_FILE")
         ;;
         "modules")
-            cache="$(cat "$M_FILE")"
+            category=$(cat "$M_FILE")
         ;;
         "topics")
-            cache="$(cat "$T_FILE")"
+            category=$(cat "$T_FILE")
         ;;
         "all")
-            cache="$(cat "$A_FILE")"
+            category=$(cat "$A_FILE")
         ;;
         *)
             exit 0
         ;;
     esac >/dev/null
-    if [ -t 0 ]; then
-        echo "$cache" | dmenu -i -p 'enter man page name: ' -l 30 | xargs -r -o python -m pydoc
-    else
-        echo "$cache" | dmenu -i -p 'enter man page name: ' -l 30 | xargs -r "$TERMINAL" -e python -m pydoc
-    fi
+    man_page=$(echo "$category" | dmenu -i -p 'enter man page name: ' -l 30)
+    [ -n "$man_page" ] || exit 0 # handle cancel
 }
 
 run
+
+if [ -t 0 ]; then
+    # execute in current $TERMINAL (already spawned)
+    exec python -m pydoc "$man_page"
+else
+    # spawn $TERMINAL and execute (works with dmenu)
+    exec "$TERMINAL" -e python -m pydoc "$man_page"
+fi

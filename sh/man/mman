@@ -1,11 +1,19 @@
 #!/bin/sh
 # search locally and open man page in $MANPAGER
+
+sel_page() {
+    man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}'
+}
+
+man_page=$(sel_page)
+[ -n "$man_page" ] || exit 0 # handle cancel
+
 if [ -t 0 ]; then
     # execute in current $TERMINAL (already spawned)
-    man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}' | xargs -r man
+    exec man "$man_page"
 else
     # spawn $TERMINAL and execute (works with dmenu)
-    man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}' | xargs -r "$TERMINAL" -e man
+    exec "$TERMINAL" -e man "$man_page"
 fi
 
 ## open man page as pdf in zathura
