@@ -26,21 +26,23 @@
 # or should be this?
 #pw-jack jack_control dps device hw:PCH,0
 
-pactl list sinks short | grep -q "combined" # 0 if found
-if [ "$?" -ne 0 ]; then
+# port names for jack_connect
+dflt_port="Built-in Audio Analog Stereo"
+comb_port="combined Audio/Sink sink"
+# get hdmi port name (varies between the updates/machines)
+hdmi_port=$(pw-jack jack_lsp -c | grep "HDMI.*:playback_FL" | tail -n1 | sed "s/:playback_FL//")
+
+if ! pactl list sinks short | grep -q "combined"; then
     # create
     pactl load-module module-null-sink object.linger=1 media.class=Audio/Sink sink_name=combined channel_map=stereo
     # connect
-    pw-jack jack_connect "combined Audio/Sink sink:monitor_FL" "HDA Intel PCH:playback_FL"
-    pw-jack jack_connect "combined Audio/Sink sink:monitor_FR" "HDA Intel PCH:playback_FR"
+    pw-jack jack_connect "$comb_port:monitor_FL" "$dflt_port:playback_FL"
+    pw-jack jack_connect "$comb_port:monitor_FR" "$dflt_port:playback_FR"
 fi
 
-pw-jack jack_lsp -c | grep -q "   HDA NVidia:"
-if [ "$?" -eq 1 ]; then
-    sleep 5
-    # connect
-    pw-jack jack_connect "combined Audio/Sink sink:monitor_FL" "HDA NVidia:playback_FL"
-    pw-jack jack_connect "combined Audio/Sink sink:monitor_FR" "HDA NVidia:playback_FR"
+if [ -n "$hdmi_port" ]; then # connect
+    pw-jack jack_connect "$comb_port:monitor_FL" "$hdmi_port:playback_FL"
+    pw-jack jack_connect "$comb_port:monitor_FR" "$hdmi_port:playback_FR"
 fi
 
 # set
