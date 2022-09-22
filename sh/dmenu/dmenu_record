@@ -65,6 +65,23 @@ demo() { ffmpeg \
 	updateicon "🔴 DEMO"
 	}
 
+rs() { \
+	ffmpeg -y \
+	-f x11grab \
+	-framerate 14 \
+	-s "1920x1080" \
+	-i "$DISPLAY" \
+	-f alsa -i default \
+	-r 14 \
+    -vf scale=-2:360 -pix_fmt yuv420p -max_muxing_queue_size 4096 \
+    -color_primaries 1 -color_trc 1 -colorspace 1 \
+    -c:v libx264 -profile:v baseline -preset medium -crf 28 \
+    -ac 2 -c:a aac -profile:a aac_low -ar 48000 \
+	"$HOME/Films/.mpv_encode/rs/rs-$(date '+%Y%m%d-%H%M-%S').mp4" &
+	echo $! > /tmp/recordingpid
+	updateicon "🔴 RS"
+    }
+
 webcamhidef() { ffmpeg \
 	-f v4l2 \
 	-i /dev/video0 \
@@ -94,8 +111,10 @@ audio() { \
 	}
 
 askrecording() { \
-	choice=$(printf "screencast\\nvideo\\naudio\\nwebcam\\nwebcam (hi-def)" | dmenu -i -p "Select recording style:")
+	choice=$(printf "rs\\ndemo\\nscreencast\\nvideo\\naudio\\nwebcam\\nwebcam (hi-def)" | dmenu -i -p "Select recording style:")
 	case "$choice" in
+        rs) rs;;
+        demo) demo;;
 		screencast) screencast;;
 		audio) audio;;
 		video) video;;
@@ -111,6 +130,7 @@ asktoend() { \
 
 
 case "$1" in
+	rs) rs;;
 	demo) demo;;
 	screencast) screencast;;
 	audio) audio;;
