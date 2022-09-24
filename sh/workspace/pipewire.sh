@@ -32,13 +32,14 @@ comb_port="combined Audio/Sink sink"
 # get hdmi port name (varies between the updates/machines)
 hdmi_port=$(pw-jack jack_lsp -c | grep "HDMI.*:playback_FL" | tail -n1 | sed "s/:playback_FL//")
 
+# create combined sink
 if ! pactl list sinks short | grep -q "combined"; then
-    # create
     pactl load-module module-null-sink object.linger=1 media.class=Audio/Sink sink_name=combined channel_map=stereo
-    # connect
-    pw-jack jack_connect "$comb_port:monitor_FL" "$dflt_port:playback_FL"
-    pw-jack jack_connect "$comb_port:monitor_FR" "$dflt_port:playback_FR"
 fi
+
+# connect (always reconnect as default sink name sometimes changes)
+pw-jack jack_connect "$comb_port:monitor_FL" "$dflt_port:playback_FL"
+pw-jack jack_connect "$comb_port:monitor_FR" "$dflt_port:playback_FR"
 
 if [ -n "$hdmi_port" ]; then # connect
     pw-jack jack_connect "$comb_port:monitor_FL" "$hdmi_port:playback_FL"
