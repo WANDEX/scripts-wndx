@@ -97,14 +97,23 @@ compose_output() {
     # remove from _filename: -id to the end of the string including .ext
     # (because it actually does not exist in real filename after successful download)
     _filename=$(jget '_filename' | sed "s/-[^-]*$//")
-    fulltitle=$(jget 'fulltitle')
-    if [ "$_filename" != "$fulltitle" ]; then
-        # FIX: when output filename will differ -> use real filename only
-        # (because otherwise youtube-dl will newer use our template)
-        o_bot="$_filename"
-    else
-        o_bot=$(jcheckall 'track' 'episode' 'title' 'fulltitle')
-    fi
+
+
+    # FIXME: this is wrong!
+    # fulltitle=$(jget 'fulltitle')
+    # if [ "$_filename" != "$fulltitle" ]; then
+    #     # FIX: when output filename will differ -> use real filename only
+    #     # (because otherwise youtube-dl will newer use our template)
+    #     o_bot="$_filename"
+    # else
+    #     o_bot=$(jcheckall 'track' 'episode' 'title' 'fulltitle')
+    # fi
+
+    # XXX if this ok -> delete above commented out
+    # see how this works & decide
+    o_bot=$(jcheckall 'track' 'episode' 'title' 'fulltitle')
+    [ -z "$o_bot" ] && o_bot="$_filename"
+
     o_ext=$(jcheckall 'ext') && o_ext=".$o_ext"
     OUT="${o_top}${o_mid}${o_wtr}${o_xtr}${o_num}${o_bot}${o_ext}"
     unset -v o_top o_mid o_wtr o_xtr o_num o_bot o_ext
