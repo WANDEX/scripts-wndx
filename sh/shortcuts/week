@@ -2,7 +2,7 @@
 # shortcut - to edit last/previous or current week pomodoro file by default
 # also possible to calculate spent time on given slices and/or tasks
 
-PMDRD="${PMDRD:-"$HOME/Documents/Pomodoro"}"
+POMODORO_DIR="${POMODORO_DIR:-"$HOME/Documents/Pomodoro"}"
 
 OLDIFS="$IFS"
 # set variable to a new line, to use later as a value in Internal Field Separator
@@ -21,7 +21,7 @@ case "$1" in
 esac
 
 find_week_file() {
-    fpath=$(find "$PMDRD" -type f -name "$file")
+    fpath=$(find "$POMODORO_DIR" -type f -name "$file")
     if [ ! -f "$fpath" ]; then
         printf "%s\n${RED}%s${END}\n" "$file" "FNF. exit."
         exit 1
@@ -29,7 +29,7 @@ find_week_file() {
 }
 
 find_all_week_files() {
-    _fall="$(find "$PMDRD" -type f \( ! -iname "TODO*" \) -type f -printf '%P\n' | sort -V)"
+    _fall="$(find "$POMODORO_DIR" -type f \( ! -iname "TODO*" \) -type f -printf '%P\n' | sort -V)"
     # exclude week files before $1 week file
     if [ -n "$1" ]; then
         if echo "$_fall" | grep -Fq "$1"; then
@@ -71,7 +71,7 @@ grep_query() {
             files="$fpath"
         fi
         files_in_one_line="$(echo "$files" | tr '\n' ' ')"
-        cd "$PMDRD" || exit 1 # specifically before the cat!
+        cd "$POMODORO_DIR" || exit 1 # specifically before the cat!
         # shellcheck disable=SC2086 # (Double quote to prevent globbing and word splitting)
         MEGACAT="$(cat $files_in_one_line)" # all files split by space
         slice="$(echo "$MEGACAT" | grep -F -s "$search_query")"
