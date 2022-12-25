@@ -20,6 +20,13 @@ PRESETS=$(sed -n "/\[/,/\]/p" "$CACHE" | sed '1d;$d')
 ST_S="string:x-dunst-stack-tag:setbg"
 ST_H="string:x-dunst-stack-tag:hi" # history_ignore
 
+PIPE=""
+# support path to the image file from pipe (only first line if many)
+[ -t 0 ] || PIPE=$(cat | head -n1)
+# dismiss not valid input from pipe
+# clear PIPE variable if file does not exist
+[ -f "$PIPE" ] || PIPE=""
+
 bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
@@ -39,6 +46,7 @@ OPTIONS
     --startup           Set default wallpaper image and exit without magick
 EXAMPLES
     $bname -i ./image.jpg -x '--maximize' --margs='-colorspace Gray'
+    echo random_image_path | $bname
 ")
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
@@ -57,6 +65,7 @@ get_opt() {
     output='all'
     # decide which image file to work with (--image option override this)
     [ -e "$DEST_PATH" ] && image="$DEST_PATH" # get default image if file exist
+    image="${PIPE:-"$image"}" # support path to the image file from pipe
     eval set -- "$OPTIONS"
     while true; do
         case "$1" in
