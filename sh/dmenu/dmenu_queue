@@ -28,5 +28,15 @@ for line in $match; do
 done
 IFS="$OLDIFS" # restore
 
-# sort & remove empty lines with/without spaces -> add to the end of the queue
-echo "$allfound" | sort | sed "/^[[:space:]]*$/d" | mpc add
+# sort & remove empty lines with/without spaces
+cleaned=$(echo "$allfound" | sort | sed "/^[[:space:]]*$/d")
+
+if [ "$1" = "-p" ]; then
+    # simply print paths into the terminal
+    # (relative to MPD music_directory variable)
+    echo "$cleaned"
+    exit 0
+fi
+
+# add to the end of the queue
+echo "$cleaned" | mpc add
