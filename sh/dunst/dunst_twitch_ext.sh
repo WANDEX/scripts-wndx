@@ -40,6 +40,10 @@ icon="$4"
 urgency="$5"
 }
 
+DST="string:x-dunst-stack-tag"
+bg="string:bgcolor:#9147FF"
+fg="string:fgcolor:#EFEFF1"
+
 # toggle behavior of showing notifications (ALL/ONLY LISTED)
 # 1 - show all, otherwise suppress notifications of the not listed channels.
 TLC_SHOW_ALL="${TLC_SHOW_ALL:-0}"
@@ -77,15 +81,12 @@ category=$(echo "$body" | sed "s/^.*is Live streaming //")
 
 url="https://www.twitch.tv/${twitch_channel}"
 summary="🔴 $twitch_channel LIVE:"
-body="\n[TLC]: $category\n$url"
+body="\n[TLC]: $category\n$url\n"
 
-# automatically open stream if channel if found in the auto_file (each on its own line)
+# automatically open stream if channel is found in the auto_file (each on its own line)
 auto_file="$CSCRDIR/dunst_twitch"
 [ ! -f "$auto_file" ] && touch "$auto_file"
 if grep -iqx "$twitch_channel" "$auto_file"; then
-    DST="string:x-dunst-stack-tag"
-    bg="string:bgcolor:#9147FF"
-    fg="string:fgcolor:#EFEFF1"
     dunstify -h "$DST:hi" -h "$bg" -h "$fg" "[$bname] (AUTO) mpvu:" "$twitch_channel\n" &
     setsid -f mpvu -u "$url"
 fi
@@ -102,7 +103,7 @@ if [ -n "$TLC_SHOW_ALL" ] && [ "$TLC_SHOW_ALL" != 1 ]; then
     fi
 fi
 
-ACTION=$(dunstify -u "$urgency" -A "default,mpvu" -A "clip,url" "$summary" "$body\n")
+ACTION=$(dunstify -u "$urgency" -h "$bg" -h "$fg" -A "default,mpvu" -A "clip,url" "$summary" "$body")
 
 case "$ACTION" in
 "default")
