@@ -1,6 +1,9 @@
 #!/bin/bash
 # download via youtube-dl video playlist or single video
 
+# change main executable: youtube-dl, yt-dlp
+ytdl_exec="yt-dlp"
+
 bname=$(basename "$0")
 USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
@@ -28,13 +31,13 @@ get_opt() {
     LONG=best,begin:,end:,file:,help,interactive,path:,progress,oscr,restrict,quality:,url:,ytdl:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
-    OUT="$HOME"'/Films/.yt/'
+    OUT_DIR="$HOME/Films/.yt"
     START=1    # youtube-dl --playlist-start > download from playlist index
     END=1      # youtube-dl --playlist-end > get first N items from playlist
     ENDOPT=0
     EXT='webm' # prefer certain extension over FALLBACK in youtube-dl
     QLT='1080' # video height cap, will be less if unavailable in youtube-dl
-    URL="$(xclip -selection clipboard -out)"
+    URL=$(xclip -selection clipboard -out)
     restr=()
     YTDLOPTS=()
     PROGRESS=0
@@ -97,7 +100,8 @@ get_opt() {
             ;;
         -p|--path)
             shift
-            OUT="$1"
+            # also trim any number of trailing slashes (if any)
+            OUT_DIR="${1%%+(/)}"
             ;;
         -P|--progress)
             [ "$PROGRESS" -eq 1 ] && PROGRESS=0 || PROGRESS=1 # toggle behavior of value
@@ -169,18 +173,18 @@ ytdl_check() {
             np=( --no-playlist )
         ;;
     esac
-    JSON="$(youtube-dl --dump-json --no-warnings "${pindex[@]}" --playlist-end=1 "${np[@]}" "$url")"
+    JSON=$("$ytdl_exec" --dump-json --no-warnings "${pindex[@]}" --playlist-end=1 "${np[@]}" "$url")
     return_code=$?
     if [ "$return_code" -ne 0 ]; then
-        summary="youtube-dl ERROR[$return_code]:"
+        summary="$ytdl_exec ERROR[$return_code]:"
         msg="TERMINATED Invalid URL,\nor first element from the URL"
         notify-send -u critical "$summary" "$msg"
         exit $return_code
     else
         if [ "$OUT_PATH_SCRIPT" -eq 1 ]; then
-            RAWOUT="$(echo "$JSON" | ytdl_out_path.sh | head -n1)" # use a template based on first file if many
+            RAWOUT=$(echo "$JSON" | ytdl_out_path.sh | head -n1) # use a template based on first file if many
         fi
-        OUTPATH="$OUT""$RAWOUT"
+        OUTPATH="${OUT_DIR}/${RAWOUT}"
     fi
 }
 
@@ -210,7 +214,7 @@ statistic() {
 
 ytdl_cmd() {
     url="$1"
-    yt-dlp --console-title --ignore-errors --yes-playlist \
+    "$ytdl_exec" --console-title --ignore-errors --yes-playlist \
         "${pindex[@]}" --playlist-start="$START" --playlist-end="$END" \
         --write-sub --sub-lang en,ru --sub-format "ass/srt/best" --embed-subs \
         --format "$FORMAT" --output "$OUTPATH" "${restr[@]}" "${YTDLOPTS[@]}" "$url"
@@ -221,9 +225,9 @@ ytdl_cmd() {
 add_index() {
     # remove old & add new index to filename, then output new path
     _index="$1"
-    _path=$(dirname "$OUTPATH")
+    _path=$(dirname  "$OUTPATH")
     _base=$(basename "$OUTPATH" | sed "s/^[[:digit:]]\+\. //") # remove old index
-    _out="$_path/$_index$_base"
+    _out="${_path}/${_index}${_base}"
     echo "$_out"
 }
 
@@ -254,41 +258,57 @@ ytdl_download() {
     fi
 }
 
-ytdl() {
-    # youtube-dl
-    url="$1"
-    case "$QLT" in
-        *"1"*)
-            QLT="1080"
-        ;;
-        *"4"*)
-            QLT="480"
-        ;;
-        *"7"*)
-            QLT="720"
-        ;;
-        *"8"*)
-            QLT="1080"
-        ;;
-    esac >/dev/null
-    VIDEO='bestvideo[ext='"$EXT"'][height<=?'"$QLT"']'
-    AUDIO='bestaudio[ext='"$EXT"']'
-    GLUED="$VIDEO"'+'"$AUDIO"
-    FALLBACKVIDEO='bestvideo[height<=?'"$QLT"']'
-    FALLBACKAUDIO='bestaudio/best'
+ytdl_av_format_string() {
     if [ "$BESTFORMAT" -eq 1 ]; then
         FORMAT="best"
     else
-        FORMAT="$GLUED"'/'"$FALLBACKVIDEO"'+'"$FALLBACKAUDIO"
+        case "$QLT" in
+            *"1"*)
+                QLT="1080"
+            ;;
+            *"4"*)
+                QLT="480"
+            ;;
+            *"7"*)
+                QLT="720"
+            ;;
+            *"8"*)
+                QLT="1080"
+            ;;
+        esac
+        VIDEO='bestvideo[ext='"$EXT"'][height<=?'"$QLT"']'
+        AUDIO='bestaudio[ext='"$EXT"']'
+        GLUED="${VIDEO}+${AUDIO}"
+        FALLBACKVIDEO='bestvideo[height<=?'"$QLT"']'
+        FALLBACKAUDIO='bestaudio/best'
+        # full audio/video format string
+        FORMAT="${GLUED}/${FALLBACKVIDEO}+${FALLBACKAUDIO}"
     fi
-    title="$(echo "$JSON" | jq -r ".title")"
+}
+
+ytdl() {
+    # youtube-dl
+    url="$1"
+    ytdl_av_format_string
+
+    title=$(echo "$JSON" | jq -r ".title")
+    # XXX not sure about the body & fulltitle
+    fulltitle=$(echo "$JSON" | jq -r ".fulltitle")
     case "$url" in
         *"playlist?list="*) body="$url" ;;
-        *) body="$title" ;;
+        *)
+            if [ -n "$title" ]; then
+                body="$title"
+            elif [ -n "$fulltitle" ]; then
+                body="$fulltitle"
+            else
+                body="$url"
+            fi
+        ;;
     esac
     if [ "$END" = "-1" ]; then
         # last playlist_index num (length)
-        lindx="$(echo "$JSON" | jq -r '.playlist_index' | tail -n 1 | sed "s/[ ]*//g")"
+        lindx=$(echo "$JSON" | jq -r '.playlist_index' | tail -n 1 | sed "s/[ ]*//g")
         case "$lindx" in
             null|''|*[!0-9]*) lindx=1 ;; # this comes if variable contains non int characters
         esac
@@ -301,8 +321,9 @@ ytdl() {
         dunstify -h "string:x-dunst-stack-tag:dp_$fwid" \
             "[DOWNLOAD][VIDEO][STARTED]($fwid){$lindx}:" "\n$body\n"
     fi
+
     ytdl_download "$url"
-    if [ $exit_code -eq 0 ]; then
+    if [ "$exit_code" -eq 0 ]; then
         if [ $is_term -eq 1 ]; then
             dunstify -u normal -h "string:x-dunst-stack-tag:dp_$fwid" \
                 "[DOWNLOAD][VIDEO][COMPLETED]($fwid)" "\n$body\n"
@@ -321,7 +342,7 @@ ytdl() {
             xdotool set_window --name "$TERMINAL" "$fwid" # set name (because ytdl will leave '...100%...')
             xprop -id "$fwid" -remove WM_ICON_NAME # remove property (as it's default in st)
         fi
-        exit $exit_code
+        exit "$exit_code"
     fi
 }
 
@@ -333,8 +354,8 @@ main() {
             echo "" # move to a new line
             case "$REPLY" in
                 [Yy]*) END=-1; break;;
-                [Nn]*) END=1; break;;
-                *) echo "I don't get it.";;
+                [Nn]*) END=1;  break;;
+                *) echo "I do not get it.";;
             esac
         done
     fi
