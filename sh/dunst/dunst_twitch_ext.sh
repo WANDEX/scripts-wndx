@@ -52,6 +52,7 @@ TLC_SHOW_ALL="${TLC_SHOW_ALL:-0}"
 ##       Channel login is the actual thing used in construction of the channel $url.
 ##       Considering this, script cannot work properly for channels which login is different.
 ##       Case is ignored, but this is all.
+##       To workaround this go to: 'HACK ALIAS'
 ##
 ## original notification format at the time of writing the script:
 ## s: 'Twitch Live Channels'
@@ -66,8 +67,26 @@ dump_vars() {
 
 # sed get only channel name inside surrounding: <b> </b>
 twitch_channel=$(echo "$body" | sed -n "s/^.*>\(.*\)<.*$/\1/p")
-# remove all unprintable characters & spaces (just in case)
+_raw_non_ascii="$twitch_channel"
+# remove all unprintable characters & spaces (to have only Latin characters, else empty)
 twitch_channel=$(echo "$twitch_channel" | tr -cd "[:print:]")
+
+# HACK ALIAS: channel name to the channel login via predefined alias from the file,
+# to construct valid twitch channel url etc.
+## NOTE: how to define alias (the example line format of the file):
+## v-(channel login for the url construction, manually predefined alias)
+## v        v-(columns are split by the ':' character)
+## v        v  v-(channel name, in this specific case it is in the Korean)
+## juliday97: '줄리님'
+if [ -z "$twitch_channel" ]; then
+    ntl_alias="$CSCRDIR/dunst_twitch_name_to_login"
+    [ ! -f "$ntl_alias" ] && touch "$ntl_alias"
+    twitch_login=$(grep -Fiw "$_raw_non_ascii" "$ntl_alias" | cut -d: -f1)
+    # if alias is defined -> override with the alias
+    [ -n "$twitch_login" ] && twitch_channel="$twitch_login"
+    # NOTE: defining twitch login alias is a workaround
+    # for the channels which name and login differ. (to construct proper channel url)
+fi
 
 # handle case when $twitch_channel is empty
 if [ -z "$twitch_channel" ]; then
