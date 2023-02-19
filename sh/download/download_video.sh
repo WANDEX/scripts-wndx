@@ -9,9 +9,9 @@ USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
 OPTIONS
     -B, --best          Toggle using of simple 'best' format
-    -b, --begin         Download from playlist index (default:1)
-    -e, --end           If url is playlist - how many items to download (default:1)
-    -f, --file          Read url's from file, and download each specified on it's own line
+    -b, --begin         Start from the playlist index (default:1)
+    -e, --end           If url is playlist - how many items to download (default:1) (full:-1)
+    -f, --file          Read urls from the file, and download each specified on its own line
     -h, --help          Display help
     -i, --interactive   Explicit interactive playlist end mode
     -p, --path          Destination path where to download
@@ -19,8 +19,8 @@ OPTIONS
     -o, --oscr          Toggle using of out path script for composing path
     -q, --quality       Quality of video/stream
     -r, --restrict      Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
-    -u, --url           URL of video/stream
-    -y, --ytdl          Any other youtube-dl native options (specify only inside \"\")
+    -u, --url           URL of the video
+    -y, --ytdl          Any other ytdl native options (specify only inside \"\")
 EXAMPLES:
     $bname -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
@@ -32,11 +32,13 @@ get_opt() {
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
     OUT_DIR="$HOME/Films/.yt"
-    START=1    # youtube-dl --playlist-start > download from playlist index
-    END=1      # youtube-dl --playlist-end > get first N items from playlist
+    START=1     # ytdl --playlist-start > start from the playlist index
+    END=1       # ytdl --playlist-end > get first N items from playlist (full:-1)
     ENDOPT=0
-    EXT='webm' # prefer certain extension over FALLBACK in youtube-dl
-    QLT='1080' # video height cap, will be less if unavailable in youtube-dl
+    ## video quality prerequisites for the specific EXT
+    EXT='webm'  # prefer specific extension over fallback
+    UQLT='1080' # upper bound video height cap, specific for the extension EXT
+    LQLT='720'  # lower bound -//- [hardcoded] (if unavailable for the EXT -> fallback)
     URL=$(xclip -selection clipboard -out)
     restr=()
     YTDLOPTS=()
@@ -114,7 +116,7 @@ get_opt() {
             ;;
         -q|--quality)
             shift
-            QLT="$1"
+            UQLT="$1"
             ;;
         -y|--ytdl)
             shift
@@ -261,29 +263,32 @@ ytdl_download() {
 ytdl_av_format_string() {
     if [ "$BESTFORMAT" -eq 1 ]; then
         FORMAT="best"
-    else
-        case "$QLT" in
-            *"1"*)
-                QLT="1080"
-            ;;
-            *"4"*)
-                QLT="480"
-            ;;
-            *"7"*)
-                QLT="720"
-            ;;
-            *"8"*)
-                QLT="1080"
-            ;;
-        esac
-        VIDEO='bestvideo[ext='"$EXT"'][height<=?'"$QLT"']'
-        AUDIO='bestaudio[ext='"$EXT"']'
-        GLUED="${VIDEO}+${AUDIO}"
-        FALLBACKVIDEO='bestvideo[height<=?'"$QLT"']'
-        FALLBACKAUDIO='bestaudio/best'
-        # full audio/video format string
-        FORMAT="${GLUED}/${FALLBACKVIDEO}+${FALLBACKAUDIO}"
+        return
     fi
+    case "$UQLT" in
+        *"1"*)
+            UQLT="1080"
+        ;;
+        *"8"*)
+            UQLT="1080"
+        ;;
+        *"7"*)
+            UQLT="720"
+        ;;
+        *"4"*)
+            UQLT="480"
+        ;;
+    esac
+    ## ext specific
+    _ext_video_q="bestvideo[ext=${EXT}][height<=${UQLT}][height>=${LQLT}]"
+    _ext_audio_q="bestaudio[ext=${EXT}]"
+    _ext_specs_q="${_ext_video_q}+${_ext_audio_q}"
+    ## fallback
+    _fll_video_q="bestvideo[height<=${UQLT}]"
+    _fll_audio_q="bestaudio"
+    _fll_specs_q="${_fll_video_q}+${_fll_audio_q}"
+    ## full audio/video format string with fallbacks split by the '/'
+    FORMAT="${_ext_specs_q}/${_fll_specs_q}/best"
 }
 
 ytdl() {
