@@ -237,14 +237,18 @@ loop_over_urls() {
     # read line by line
     while IFS= read -r url; do
         ytdl_check "$url"
-        case "$url" in
-            *"&index="*)
-                # if url contains explicit index, use it as filename prefix
-                index=$(get_index "$url") # get_index out of url parameters
-                findex=$(printf "%.3d%s" "$index" ". ") # make index of format
-                OUTPATH=$(add_index "$findex")
-            ;;
-        esac
+        ## XXX:  Not sure if we still need that...
+        ##       Feels like it can be useful if url of the video is not based on the playlist.
+        ## TODO: Remove later following commented out lines and related funcs when sure about that.
+        ##       Because now it feels like a legacy before i wrote OUT_PATH_SCRIPT.
+        # case "$url" in
+        #     *"&index="*)
+        #         # if url contains explicit index, use it as filename prefix
+        #         index=$(get_index "$url") # get_index out of url parameters
+        #         findex=$(printf "%.3d%s" "$index" ". ") # make index of format
+        #         OUTPATH=$(add_index "$findex")
+        #     ;;
+        # esac
         printf "\n> %s\n" "$url"
         ytdl_cmd "$url"
     done <<< "$URLS"
