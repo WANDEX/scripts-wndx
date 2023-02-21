@@ -9,10 +9,13 @@ OLDIFS="$IFS"
 # set variable to a new line, to use later as a value in Internal Field Separator
 NLIFS='
 '
-ext="mp3"
 
+# change main executable: youtube-dl, yt-dlp
+ytdl_exec="yt-dlp"
+
+bname=$(basename "$0")
 USAGE=$(printf "%s" "\
-Usage: $(basename "$0") [OPTION...]
+Usage: $bname [OPTION...]
 OPTIONS
     -e, --end       If url is playlist - how many items to download (by default all:-1)
     -h, --help      Display help
@@ -20,9 +23,9 @@ OPTIONS
     -n, --notify    Toggle showing of desktop notifications
     -r, --restrict  Restrict filenames to only ASCII characters, and avoid '&' and spaces in filenames
     -u, --url       URL to download
-    -y, --ytdl      Any other youtube-dl native options (specify only inside \"\")
+    -y, --ytdl      Any other ytdl native options (specify only inside \"\")
 EXAMPLES:
-    $(basename "$0") -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
+    $bname -u \"\$URL\" -y '--simulate --get-duration' -y '--playlist-items 1-3'
 ")
 
 isfile() {
@@ -139,6 +142,7 @@ get_opt() {
     LONG=end:,help,notify,path:,restrict,url:,ytdl:
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
+    EXT="mp3"
     URL="$(xclip -selection clipboard -out)"
     PEND=-1
     DNOTIFY=1
@@ -270,9 +274,9 @@ FALLBACK="bestaudio/best"
 FORMAT="${BEST}/${FALLBACK}"
 
 cmd=(\
-youtube-dl --ignore-errors --yes-playlist --playlist-end="$PEND" \
+"$ytdl_exec" --ignore-errors --yes-playlist --playlist-end="$PEND" \
 --format "$FORMAT" \
---extract-audio --audio-format "$ext" \
+--extract-audio --audio-format "$EXT" \
 --add-metadata --no-overwrites --no-post-overwrites \
 --youtube-skip-dash-manifest \
 "${restr[@]}" "${OPT[@]}" "${YTDLOPTS[@]}" \
@@ -282,7 +286,7 @@ youtube-dl --ignore-errors --yes-playlist --playlist-end="$PEND" \
 if json="$("${cmd[@]}" --dump-json "$URL")"; then
     # get list of all files from url and replace any .ext
     # (because we convert everything to that .ext after downloading)
-    list_files="$(echo "$json" | jq -er '._filename' | sed_ext ".$ext")"
+    list_files="$(echo "$json" | jq -er '._filename' | sed_ext ".$EXT")"
     first_file="$(echo "$list_files" | head -n1)"
     if [ -z "$first_file" ]; then
         notify "ERROR" "[EXIT] No _filename in json data.\n$URL"
@@ -294,7 +298,7 @@ else
 fi
 
 OUTRAW="$(echo "$json" | ytdl_out_path.sh)"
-OUTREL="$(echo "$json" | ytdl_out_path.sh --real | sed_ext ".$ext")"
+OUTREL="$(echo "$json" | ytdl_out_path.sh --real | sed_ext ".$EXT")"
 reldir="$(echo "$OUTREL" | head -n1 | sed "s|[^/]*$||")" # first file relative path to dir
 notify "STARTED - relative path:" "$reldir"
 
