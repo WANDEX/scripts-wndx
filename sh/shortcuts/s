@@ -2,7 +2,7 @@
 # return path of the shortcut selected by the fzf as the output
 # shortcuts file structure: first column - alias, second column - "path"
 
-FILE="$CONF/shortcuts"
+FILE="${XDG_CONFIG_HOME:-$HOME/.config}/shortcuts"
 if [ ! -r "$FILE" ]; then
     printf "%s\n^%s\n" "$FILE" "shortcuts file not readable, exit."
     exit 2
