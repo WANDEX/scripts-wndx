@@ -41,10 +41,8 @@ fi
 pw-jack jack_connect "$comb_port:monitor_FL" "$dflt_port:playback_FL"
 pw-jack jack_connect "$comb_port:monitor_FR" "$dflt_port:playback_FR"
 
-if [ -n "$hdmi_port" ]; then # connect
-    pw-jack jack_connect "$comb_port:monitor_FL" "$hdmi_port:playback_FL"
-    pw-jack jack_connect "$comb_port:monitor_FR" "$hdmi_port:playback_FR"
-fi
+pw-jack jack_connect "$comb_port:monitor_FL" "$hdmi_port:playback_FL"
+pw-jack jack_connect "$comb_port:monitor_FR" "$hdmi_port:playback_FR"
 
 # set
 pactl set-default-sink combined
