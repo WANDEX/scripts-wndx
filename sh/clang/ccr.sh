@@ -9,6 +9,10 @@ case "$1" in
         iext=".c"
         std="-std=c17"
     ;;
+    *.h)
+        iext=".h"
+        std="-std=c17"
+    ;;
     *.cpp)
         iext=".cpp"
         std="-std=c++17"
@@ -22,5 +26,6 @@ esac
 [ -z "$iext" ] && exit 2
 # out basename replacing .ext on .out
 oname=$(basename "$1" | sed "s/$iext$/$oext/")
-"clang${pp}" -Wall "$std" -o "$oname" "$@"  || exit 1
+# shellcheck disable=SC2068 # Double quote array expansions to avoid re-splitting elements
+"clang${pp}" -Wall "$std" -o "$oname" $@ || exit 1
 "./$oname"
