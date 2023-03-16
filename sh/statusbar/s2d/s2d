@@ -1,7 +1,7 @@
 #!/bin/sh
 # get color or drawing by name and output as simple string
 
-abs_dir_path="$(dirname "$(realpath "$0")")"
+abs_dir_path=$(dirname "$(realpath "$0")")
 cpath="$abs_dir_path/.colors"
 dpath="$abs_dir_path/.drawings"
 [ ! -f "$cpath" ] && printf "%s: %s\n%s\n" "ERROR & EXIT" "not found file:" "$cpath" && exit 1
@@ -64,11 +64,11 @@ get_opt() {
             draw="$1"
             cc=$(clean_content "$dpath")
             out_d_line=$(echo "$cc" | grep "$draw")
-            out_d="$(echo "$out_d_line" | awk '{print $2}')"
+            out_d=$(echo "$out_d_line" | awk '{print $2}')
             case "$out_d" in
                 *\$[0-9]*)
                     # $3 is the next argument after drawing name ($2 = --)
-                    out_d="$(echo "$out_d" | sed "s/[$][0-9]/$3/")"
+                    out_d=$(echo "$out_d" | sed "s/[$][0-9]/$3/")
                 ;;
             esac
             # xsetroot -name "$out_d" # XXX FOR TESTS ONLY!
@@ -115,14 +115,14 @@ get_opt() {
                     c4="C4" # blue
                 else
                     # use predefined colors
-                    c1="$(s2d -p 'c' -c red)"    # red
-                    c2="$(s2d -p 'c' -c green)"  # green
-                    c3="$(s2d -p 'c' -c yellow)" # yellow
-                    c4="$(s2d -p 'c' -c blue)"   # blue
+                    c1=$(s2d -p 'c' -c red)    # red
+                    c2=$(s2d -p 'c' -c green)  # green
+                    c3=$(s2d -p 'c' -c yellow) # yellow
+                    c4=$(s2d -p 'c' -c blue)   # blue
                 fi
             fi
             # divide battery level by 5 to get 20 battery drawing states
-            level="$(echo "$battery_level/5" | bc)"
+            level=$(echo "$battery_level/5" | bc)
             # based on value of battery level variable:
             # - dynamic x,w to animate battery level drain
             # - dynamic remaining capacity fill color
@@ -158,7 +158,7 @@ get_opt() {
             cpct="^${CC}^^r$x,04,$w,08^" # Fill it with the remaining capacity
             reset="^d^^f24^" # Reset the colorscheme and forward the cursor
             # compose it all together
-            composed="$(printf "%s%s%s%s%s" "$nose" "$batt" "$fill" "$cpct" "$reset")"
+            composed=$(printf "%s%s%s%s%s" "$nose" "$batt" "$fill" "$cpct" "$reset")
             # xsetroot -name "$composed" # XXX FOR TESTS ONLY!
             printf "%s" "$composed"
             exit 0
