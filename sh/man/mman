@@ -1,18 +1,24 @@
 #!/bin/sh
-# search locally and open man page in $MANPAGER
+## search locally and open man page in $MANPAGER
 
-sel_page() {
-    man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}'
-}
+## fman_page() selected cut -> socket (3p) | tr -> socket.3p.
+## cut & tr to support opening specific manual entry section.
+fman_page() { ## -> socket.3p
+man -k . \
+| dmenu -p 'enter man page: ' -l 30 \
+| cut -d' ' -f -2 --output-delimiter='.' \
+| tr -cd '[=.=][:alnum:]'
+} ## ^ delete all characters except ('.' + letters and digits)
 
-man_page=$(sel_page)
-[ -n "$man_page" ] || exit 0 # handle cancel
+man_page=$(fman_page)
+
+[ -n "$man_page" ] || exit 0 ## handle cancel
 
 if [ -t 0 ]; then
-    # execute in current $TERMINAL (already spawned)
+    ## execute in current $TERMINAL (already spawned)
     exec man "$man_page"
 else
-    # spawn $TERMINAL and execute (works with dmenu)
+    ## spawn $TERMINAL and execute (works with dmenu)
     exec "$TERMINAL" -e man "$man_page"
 fi
 
