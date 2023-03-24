@@ -1,20 +1,40 @@
 #!/bin/sh
-## search locally and open man page in $MANPAGER
+## search locally and open man page in $MANPAGER.
+## supports any man command arguments as the arguments of the script.
+
+# (Double quote array expansions to avoid re-splitting elements.)
+# shellcheck disable=SC2068 ## intention! ^
+if [ "$1" = 'pdf' ]; then
+    ## to later open man page as pdf in zathura
+    man_any_args=$(man -k .)
+elif [ "$1" = '--' ]; then
+    ## -> without description
+    man_any_args=$(man -k . | cut -d' ' -f -2)
+elif [ -n "${*}" ]; then
+    ## -> with any supplied man cmd args
+    man_any_args=$(man -k . ${@})
+else
+    ## -> without args (default behavior)
+    man_any_args=$(man -k .)
+fi
 
 ## fman_page() selected cut -> socket (3p) | tr -> socket.3p.
 ## cut & tr to support opening specific manual entry section.
 fman_page() { ## -> socket.3p
-man -k . \
+echo "$man_any_args" \
 | dmenu -p 'enter man page: ' -l 30 \
 | cut -d' ' -f -2 --output-delimiter='.' \
-| tr -cd '[=.=][:alnum:]'
-} ## ^ delete all characters except ('.' + letters and digits)
+| tr -cd '[=.=][=:=][=-=][=_=][:alnum:]'
+} ## ^ delete all characters except ([.:-_] + letters and digits)
 
 man_page=$(fman_page)
 
 [ -n "$man_page" ] || exit 0 ## handle cancel
 
-if [ -t 0 ]; then
+if [ "$1" = 'pdf' ]; then
+    ## open man page as pdf in zathura
+    exec man -Tpdf "$man_page" | zathura -
+elif [ -t 0 ]; then
     ## execute in current $TERMINAL (already spawned)
     exec man "$man_page"
 else
@@ -22,5 +42,3 @@ else
     exec "$TERMINAL" -e man "$man_page"
 fi
 
-## open man page as pdf in zathura
-#man -k . | dmenu -p 'enter man page: ' -l 30 | awk '{print $1}' | xargs -r man -Tpdf | zathura -
