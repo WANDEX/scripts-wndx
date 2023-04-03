@@ -1,11 +1,10 @@
 #!/bin/sh
 # select & set sound effects preset.
-CACHE="$CSCRDIR/active_preset"
-OUTPUT_DIR="$HOME/.config/easyeffects/output/"
-presets=$(find "$OUTPUT_DIR" -type f -printf '%f\n' | cut -f1 -d"." | sort -h)
+cache="$CSCRDIR/active_preset"
+presets=$(easyeffects -p | sed "2d; s/Output Presets: //; s/,/\n/g")
 chosen=$(echo "$presets" | dmenu -p 'select preset:' -i)
 [ -z "$chosen" ] && exit 1 # exit if none chosen.
-echo "$chosen" > "$CACHE" # update current preset name in cache file
+echo "$chosen" > "$cache" # update current preset name in cache file
 easyeffects -l "$chosen"  # change preset (real)
 # change at easyeffects GUI (only preset name)
 gsettings set com.github.wwmm.easyeffects last-used-output-preset "$chosen"
