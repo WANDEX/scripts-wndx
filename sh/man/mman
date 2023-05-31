@@ -2,6 +2,13 @@
 ## search locally and open man page in $MANPAGER.
 ## supports any man command arguments as the arguments of the script.
 
+prompt="enter man page: "
+if [ -t 0 ]; then
+    finder_cmd() { $FZF_DEFAULT_COMMAND --prompt="$prompt" ;}
+else
+    finder_cmd() { dmenu -p "$prompt" -l 30 ;}
+fi
+
 # (Double quote array expansions to avoid re-splitting elements.)
 # shellcheck disable=SC2068 ## intention! ^
 if [ "$1" = 'pdf' ]; then
@@ -21,8 +28,7 @@ fi
 ## fman_page() selected cut -> socket (3p) | tr -> socket.3p.
 ## cut & tr to support opening specific manual entry section.
 fman_page() { ## -> socket.3p
-echo "$man_any_args" \
-| dmenu -p 'enter man page: ' -l 30 \
+echo "$man_any_args" | finder_cmd \
 | cut -d' ' -f -2 --output-delimiter='.' \
 | tr -cd '[=.=][=:=][=-=][=_=][:alnum:]'
 } ## ^ delete all characters except ([.:-_] + letters and digits)
@@ -39,6 +45,6 @@ elif [ -t 0 ]; then
     exec man "$man_page"
 else
     ## spawn $TERMINAL and execute (works with dmenu)
-    exec "$TERMINAL" -e man "$man_page"
+    exec "$TERMINAL" -T "man ${man_page}" -e man "$man_page"
 fi
 
