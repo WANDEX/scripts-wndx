@@ -18,6 +18,8 @@ digits='\d+' # simple digits
 # create files if they do not exist
 [ -f "$week_file" ] || touch "$week_file"
 [ -f "$todo_file" ] || touch "$todo_file"
+[ -f "$hist"      ] || touch "$hist"
+[ -f "$ignore"    ] || touch "$ignore"
 
 # r - option adds junk characters into completion list at runtime -> after filter!
 # that's why filter cannot remove them
