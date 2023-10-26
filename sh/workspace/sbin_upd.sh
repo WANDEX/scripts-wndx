@@ -27,9 +27,9 @@ dir_sbin="${dir_pth}/sbin"
 
 
 if at_path fd; then
-    fpaths=$(fd . "$dir_sh" -t x)
+    fpaths=$(fd . "$dir_sh" -t x -t l)
 else
-    fpaths=$(find . "$dir_sh" -type f -executable)
+    fpaths=$(find . "$dir_sh" -type f -type l -executable)
 fi
 
 rm -f "${dir_sbin}/*"
@@ -37,7 +37,7 @@ printf "%s ${CYN}%s${END}\n" "  cleaned:" "$dir_sbin"
 
 IFS="$NL"
 for fpath in $fpaths; do
-    ln -f -s "$fpath" "${dir_sbin}"
+    ln -sf "$fpath" "$dir_sbin"
 done
 IFS="$OLDIFS"
 printf "%s ${GRN}%s${END}\n" "populated:" "$dir_sbin"
