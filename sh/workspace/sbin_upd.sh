@@ -27,7 +27,7 @@ dir_sbin="${dir_pth}/sbin"
 
 
 if at_path fd; then
-    fpaths=$(fd . "$dir_sh" -t x -t l)
+    fpaths=$(fd . "$dir_sh" --no-ignore -t x -t l)
 else
     fpaths=$(find . "$dir_sh" -type f -type l -executable)
 fi
