@@ -6,6 +6,8 @@
 # https://www.youtube.com/@meditations.acepe./playlists
 # https://www.youtube.com/c/QuietQuestStudyMusic/playlists
 
+[ "$1" = "-e" ] && exec $TERMINAL -e "$EDITOR" "$(realpath "$0")"
+
 bn=$(basename "$0")
 
 url=""
