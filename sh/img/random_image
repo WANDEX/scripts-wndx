@@ -1,5 +1,105 @@
 #!/bin/sh
 # get the full path to a random image from the directory
-DIR=${1:-"$HOME/Wallpapers/"}
-find "$DIR" -type f -name "*.jpg" -o -name "*.png" | shuf -n 1
+
+set -e
+
+bname=$(basename "$0")
+USAGE="\
+Usage: $bname [OPTION...]
+OPTIONS
+    -d, --dir           Path to dir
+    -h, --help          Display help
+    -l, --list          List files
+    -n, --head-count    Output at most COUNT lines (shuf option)
+EXAMPLES
+$bname -l ./
+$bname -d ./ -l
+$bname -d ./ -n 2
+"
+
+at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
+
+print_random() { printf "%s" "$1" | shuf --random-source=/dev/urandom -n "$2" ;}
+
+validate_dir_path() {
+if [ ! -d "$1" ]; then
+    printf "%s\n%s\n" "$1" "^ invalid dir path, exit."
+    exit 4
+fi
+}
+
+append_missing_trailing_slash() {
+## append trailing slash if not present
+## required for the path to the dir 'fix: find' etc
+if [ "$(printf "%s" "$1" | tail -c 1)" = '/' ]; then
+    printf "%s" "$1"
+else
+    printf "%s" "$1/"
+fi
+}
+
+list_img_files() {
+if at_path fd; then
+    # TODO: --list-details and sort by date
+    fd -HI --search-path "$1" -t f -e png -e jpg -e jpeg -e gif
+else
+    find "$1" -type f -name '*.png' -o -name '*.jpg' -o -name '*.jpeg' -o -name '*.gif'
+fi
+}
+
+get_opt() {
+    # Parse and read OPTIONS command-line options
+    SHORT=d:hln:
+    LONG=dir:,help,list,head-count:
+    OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
+    # PLACE FOR OPTION DEFAULTS
+    DPATH="$HOME/Wallpapers"
+    dpath=""
+    list_files=0
+    head_count=1
+    eval set -- "$OPTIONS"
+    while true; do
+        case "$1" in
+        -d|--dir)
+            shift
+            dpath="$1"
+            ;;
+        -h|--help)
+            echo "$USAGE"
+            exit 0
+            ;;
+        -l|--list)
+            list_files=1
+            ;;
+        -n|--head-count)
+            shift
+            head_count="$1"
+            ;;
+        --)
+            shift
+            # prefer passed via option
+            if [ -z "$dpath" ]; then
+                # set dir path if passed via trailing arg or default
+                dpath="${1:-"$DPATH"}"
+            fi
+            dpath=$(append_missing_trailing_slash "$dpath")
+            validate_dir_path "$dpath"
+            break
+            ;;
+        esac
+        shift
+    done
+}
+
+get_opt "$@"
+
+
+list_of_matched_images=$(list_img_files "$dpath")
+
+if [ "$list_files" = 1 ]; then
+    printf "%s\n" "$list_of_matched_images"
+    exit 0
+fi
+
+print_random "$list_of_matched_images" "$head_count"
 
