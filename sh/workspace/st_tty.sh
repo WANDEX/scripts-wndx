@@ -10,12 +10,12 @@ at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 bn=$(basename "$0")
 
 extra_text="${1:-""}"
+baud_rate="${2:-115200}"
 [ -n "$extra_text" ] && extra_text="$extra_text " # append extra space char
 
 dev_tty=$(find /dev/tty* | dmenu -i -l 20 -g 8)
 [ -z "$dev_tty" ] && exit 0 # exit if none chosen.
 
-baud_rate="115200"
 font="VictorMono Nerd Font Mono:pixelsize=14"
 ## also used as the terminal title
 line="$dev_tty ${baud_rate}"
