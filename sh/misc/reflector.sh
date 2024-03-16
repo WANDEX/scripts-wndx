@@ -1,12 +1,12 @@
 #!/bin/bash
 # requires sudo for updating mirrorlist in '/etc/pacman.d/mirrorlist'
 
-bname="$(basename "$0")"
+bname=$(basename "$0")
 mlist="/etc/pacman.d/mirrorlist"
 mlnew="${mlist}.pacnew"
 
 if sudo reflector -p https --age 24 --fastest 50 --latest 25 --sort rate \
-    --download-timeout 5 --save "$mlist"
+--download-timeout 3 --save "$mlist"
 then
     notify-send -t 0 "🆙[$bname]" "mirrorlist updated"
 else
