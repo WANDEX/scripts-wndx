@@ -45,10 +45,22 @@ pw-jack jack_connect "$comb_port:monitor_FL" "$hdmi_port:playback_FL"
 pw-jack jack_connect "$comb_port:monitor_FR" "$hdmi_port:playback_FR"
 
 # set
-pactl set-default-sink combined
-pactl set-default-source combined.monitor
+# pactl set-default-sink combined
+# pactl set-default-source combined.monitor
+
+
+# >>> hex(32768) 0x8000  -  50%
+# >>> hex(45875) 0xb333  -  70%
+# >>> hex(65536) 0x10000 - 100%
+# >>> hex(78643) 0x13333 - 120%
+# >>> hex(98304) 0x18000 = 150%
 
 # volume: 32768=50%, 45875=70%, 65536=100%, 78642=120%
-pactl set-sink-volume "$SINK0" 45875
-pactl set-sink-volume "$SINK1" 32768
-pactl set-sink-mute "$SINK1" true # mute at boot sink N
+
+pactl set-sink-volume "$SINK0" 0x10000
+pactl set-sink-volume "$SINK1" 0x18000
+
+# pactl set-sink-volume "$SINK0" 0xb333
+# pactl set-sink-volume "$SINK1" 0x8000
+# pactl set-sink-mute "$SINK1" true # mute at boot sink N
+
