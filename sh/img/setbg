@@ -1,6 +1,6 @@
 #!/bin/bash
 # advanced wallpaper setter
-# with support of 'magick convert' options without modifying original image
+# with support of 'magick' options without modifying original image
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}"
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-"$HOME/.cache"}"
@@ -31,16 +31,16 @@ bname="$(basename "$0")"
 USAGE=$(printf "%s" "\
 Usage: $bname [OPTION...]
 OPTIONS
-    -c, --clear-margs   Clear magick convert arguments
+    -c, --clear-margs   Clear magick arguments
     -e, --edit          Edit cache file with \$EDITOR
     -h, --help          Display help
     -i, --image         Provide wallpaper image
-    -m, --margs         Use 'magick convert' arguments specified 'inside single quotes'
+    -m, --margs         Use 'magick' arguments specified 'inside single quotes'
     -x, --xargs         Set 'xwallpaper' options
-    --mct               Toggle combining of magick convert options and exit
+    --mct               Toggle combining of magick options and exit
     --outint            Set output name by num from '1' to 'N' connected outputs
     --outname           Set output name with grep -i like 'VGA', first found if many
-    --preset            Interactively select preset (magick convert options)
+    --preset            Interactively select preset (magick options)
                         (0 - set, 1 - append, -1 - oneshot without modifying cached margs)
     --save              Save current preset
     --startup           Set default wallpaper image and exit without magick
@@ -57,7 +57,7 @@ get_opt() {
     LONG=clear-margs,edit,help,image:,margs:,xargs:,mct,outint:,outname:,preset:,save,startup
     OPTIONS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
     # PLACE FOR OPTION DEFAULTS
-    # get xwallpaper & 'magick convert' args from cache
+    # get xwallpaper & 'magick' args from cache
     IFS=' ' read -r -a xargs_array <<< "$C_XARGS"
     IFS=' ' read -r -a margs_array <<< "$C_MARGS"
     [ -z "${xargs_array[*]}" ] && xargs_array=( --zoom )
@@ -184,9 +184,9 @@ else
     MCA=("${margs_array[@]}")
 fi
 
-# image magick convert ($ magick -list tool)
+# image magick ($ magick -list tool)
 if at_path magick && [ -n "${MCA[*]}" ]; then
-    magick convert "$image" "${MCA[@]}" "$DEST_PATH"
+    magick "$image" "${MCA[@]}" "$DEST_PATH"
     if at_path dunstify; then
         dunstify -u low -h "$ST_S" -h "$ST_H" "[setbg] MCT=$MCT MCA:" "\n${MCA[*]}\n"
     else
