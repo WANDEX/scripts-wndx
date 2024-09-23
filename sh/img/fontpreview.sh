@@ -5,7 +5,9 @@
 #
 # Dependencies: sxiv, imagemagick, xdotool, fzf
 
-VERSION=1.0.7
+VERSION=1.0.8
+
+fzf_cmd="${FZF_DEFAULT_COMMAND:-fzf}"
 
 # Default values
 SEARCH_PROMPT=""
@@ -45,7 +47,7 @@ $EXT_TEXT_ENV
 
 at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 
-dependencies="xdotool sxiv convert fzf"
+dependencies="xdotool sxiv magick fzf"
 for dep in $dependencies; do
     if ! at_path "$dep"; then
         echo "error: Could not find '${dep}', is it installed?" >&2
@@ -94,7 +96,7 @@ pre_exit() {
 
 generate_preview() {
     # Credits: https://bit.ly/2UvLVhM
-    convert -size "$SIZE" xc:"$BG_COLOR" \
+    magick -size "$SIZE" xc:"$BG_COLOR" \
         -gravity NONE \
         -pointsize "$FONT_SIZE" \
         -font "$1" \
@@ -129,7 +131,7 @@ main() {
     while true; do
         # List out all the fonts which imagemagick is able to find, extract
         # the font names and then pass them to fzf
-        font=$(convert -list font | awk -F: '/^[ ]*Font: /{print substr($NF,2)}' | fzf --prompt="$SEARCH_PROMPT")
+        font=$(magick -list font | awk -F: '/^[ ]*Font: /{print substr($NF,2)}' | $fzf_cmd --prompt="$SEARCH_PROMPT")
 
         # Exit if nothing is returned by fzf, which also means that the user
         # has pressed [ESCAPE]
