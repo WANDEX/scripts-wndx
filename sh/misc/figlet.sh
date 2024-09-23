@@ -14,7 +14,7 @@ at_path() { hash "$1" >/dev/null 2>&1 ;} # if $1 is found at $PATH -> return 0
 if [ -z "${OPTS[*]}" ]; then
     [ -d "$FONTSDIR" ] || exit 1
     if at_path fd; then
-        FONTS=$(fd . "$FONTSDIR" -tf -e flf -x basename "{/.}" | sort)
+        FONTS=$(fd --search-path "$FONTSDIR" -tf -e flf -x basename "{/.}" | sort)
     else
         FONTS=$(find "$FONTSDIR" -type f -name '*.flf' -exec basename {} .flf ';' | sort)
     fi
