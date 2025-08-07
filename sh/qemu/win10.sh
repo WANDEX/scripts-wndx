@@ -4,6 +4,8 @@
 ## https://www.spice-space.org/download.html
 ## https://www.spice-space.org/spice-user-manual.html#_folder_sharing
 ## Do not forget to enable in WM window: Additional -> Preferences -> enable Share *.
+## XXX: Error 0x800700DF: The file size exceeds the limit allowed and cannot be saved.
+## while drag & drop of archive file works perfectly. => 'zip -r -0 ./dir.zip ./dir/'
 ##
 ## host<->guest: copy & paste, drag & drop.
 ## NOTE: install inside guest system -  Windows SPICE Guest Tools (spice-guest-tools)
