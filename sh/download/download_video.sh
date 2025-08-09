@@ -3,6 +3,7 @@
 
 # change main executable: youtube-dl, yt-dlp
 ytdl_exec="yt-dlp"
+# ytdl_exec="youtube-dl"
 
 bname=$(basename "$0")
 USAGE=$(printf "%s" "\
@@ -184,7 +185,7 @@ ytdl_check() {
         exit $return_code
     else
         if [ "$OUT_PATH_SCRIPT" -eq 1 ]; then
-            RAWOUT=$(echo "$JSON" | ytdl_out_path.sh | head -n1) # use a template based on first file if many
+            RAWOUT=$(printf "%s" "$JSON" | ytdl_out_path.sh | head -n1) # use a template based on first file if many
         fi
         OUTPATH="${OUT_DIR}/${RAWOUT}"
     fi
@@ -300,9 +301,9 @@ ytdl() {
     url="$1"
     ytdl_av_format_string
 
-    title=$(echo "$JSON" | jq -r ".title")
+    title=$(printf "%s" "$JSON" | jq -r ".title")
     # XXX not sure about the body & fulltitle
-    fulltitle=$(echo "$JSON" | jq -r ".fulltitle")
+    fulltitle=$(printf "%s" "$JSON" | jq -r ".fulltitle")
     case "$url" in
         *"playlist?list="*) body="$url" ;;
         *)
@@ -317,7 +318,7 @@ ytdl() {
     esac
     if [ "$END" = "-1" ]; then
         # last playlist_index num (length)
-        lindx=$(echo "$JSON" | jq -r '.playlist_index' | tail -n 1 | sed "s/[ ]*//g")
+        lindx=$(printf "%s" "$JSON" | jq -r '.playlist_index' | tail -n 1 | sed "s/[ ]*//g")
         case "$lindx" in
             null|''|*[!0-9]*) lindx=1 ;; # this comes if variable contains non int characters
         esac
